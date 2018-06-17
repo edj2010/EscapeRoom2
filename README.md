@@ -7,18 +7,17 @@
 
 ## DSL Format
 Four types of statements. Two connection types and two node types
-RemoteNode(nodeName)
-device not on the server computer
+RemoteNode(nodeName):
+External device sending and recieving data.
 
-LocalNode(nodeName)
-local class/variable that stores some information (for more complicated processing between external nodes)
+LocalNode(nodeName):
+Class on the server that devices can send data to and recieve data from. Allows for more complex data processing.
 
 Trigger(triggerNode, targetNode)
-notify target node anytime trigger node sends an update to the server
+Forward value to the target node anytime the trigger node sends a value to the server.
 
 Stream(triggerNode, targetNode, streamControllerName)
-stream information from trigger nod)
-e to target node while stream is active (controlled by stream controller)
+stream information from trigger node to target node every x seconds while stream is active. User implements StreamController `Start` and `Stop` methods to control when the datat is sent.
 
 #### Example
 ```
