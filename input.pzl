@@ -1,6 +1,0 @@
-RemoteNode(PressurePlates)
-LocalNode(JungleCounter)
-RemoteNode(JungleLock)
-Trigger(PressurePlates, JungleCounter)
-Trigger(JungleCounter, JungleLock)
-

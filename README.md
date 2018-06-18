@@ -16,8 +16,8 @@ Class on the server that devices can send data to and recieve data from. Allows 
 Trigger(triggerNode, targetNode)
 Forward value to the target node anytime the trigger node sends a value to the server.
 
-Stream(triggerNode, targetNode, streamControllerName)
-stream information from trigger node to target node every x seconds while stream is active. User implements StreamController `Start` and `Stop` methods to control when the datat is sent.
+Stream(triggerNode, targetNode, streamController)
+stream information from trigger node to target node every x seconds while stream is active. User implements StreamController `isActive` method to control when the datat is sent.
 
 #### Example
 ```

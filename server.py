@@ -17,9 +17,11 @@ def input(nodeName, value):
     for outputNode in outputNodes:
         if outputNode in pServer.localNodes:
             nodeObj = getattr(serverlogic, outputNode)
-            change = nodeObj.compute(value)
+            change, nodeValue = nodeObj.compute(value)
             if change:
                 input(outputNode, nodeObj.value)
+                pServer.localVals[outputNode] = nodeValue
+                print("Set local val {0} to {1}".format(outputNode, nodeValue))
         elif outputNode in pServer.remoteNodes:
             pServer.outputs[outputNode] = value
         else:
@@ -34,6 +36,16 @@ def output(nodeName):
         return str(pServer.outputs[nodeName])
     else:
         raise KeyError("{0} is not a remote node".format(nodeName))
+        # TODO: Change this to a http error code
+
+
+@app.route("/streamStatus/<streamController>")
+def streamStatus(streamController):
+    if streamController in pServer.streams:
+        streamControllerObj = getattr(serverlogic, streamController)
+        return str(streamControllerObj.isActive(pServer.localVals, None))
+    else:
+        raise KeyError("{0} is not a stream controller".format(streamController))
         # TODO: Change this to a http error code
 
 
