@@ -43,6 +43,10 @@ JSON formatted as follows:
 
 #### Example (from above DSL)
 ```json
-{"Nodes": ["PressurePlates", "JungleCounter", "JungleLock", "Dial", "DialVal"], "Streams": ["JungleDial"], "Mappings": {"PressurePlates": ["JungleCounter"], "JungleCounter": ["JungleLock"], "Dial": ["DialVal"]}}
+{"Nodes": ["PressurePlates", "JungleCounter", "JungleLock", "Dial", "DialVal"],
+ "Streams": ["JungleDial"],
+ "Mappings": {"PressurePlates": ["JungleCounter"],
+              "JungleCounter": ["JungleLock"],
+              "Dial": ["DialVal"]}}
 }
 ```
