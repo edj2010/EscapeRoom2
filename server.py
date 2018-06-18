@@ -3,14 +3,12 @@ from sqlalchemy import create_engine
 from collections import defaultdict
 import serverlogic
 from flask import Flask
-from db import heartbeats
+from models import nodes_table, metadata
 import datetime
 
 app = Flask(__name__)
 
 DB_EXISTS = True
-
-def heartbeatHandle()
 
 @app.route("/")
 def welcome():
@@ -20,7 +18,7 @@ def welcome():
 @app.route("/input/<nodeName>/<value>")
 def input(nodeName, value):
     conn = pServer.engine.connect()        
-    stmt = heartbeats.update().where(heartbeats.c.client_name == nodeName).values(last_ping = datetime.datetime.now())
+    stmt = nodes_table.update().where(nodes_table.c.client_name == nodeName).values(last_ping = datetime.datetime.now())
     conn.execute(stmt)
     outputNodes = pServer.mappings[nodeName]
     for outputNode in outputNodes:
@@ -55,19 +53,19 @@ class PuzzleServer:
     def __init__(self, filename):
         with open(filename, "r") as infile:
             connections = json.load(infile)
-        self.nodes = dict()
-        self.nodes[node] = ID for node,ID in enumerate(connection["Nodes"])
-        self.nodesconnections["Nodes"]
+        self.nodes = {node:ID for node,ID in enumerate(connections["Nodes"])}
         self.streams = connections["Streams"]
         self.mappings = connections["Mappings"]
         self.outputs = defaultdict(str)
         self.localVals = {}
         self.engine = create_engine('sqlite:///server.db', echo=True)
-        if not self.engine.dialect.has_table(engine, 'heartbeats'):
-            heartbeats.create()
-            i = heartbeat.insert()
+        if not self.engine.dialect.has_table(self.engine, 'nodes_table'):
+            metadata.bind = self.engine
+            metadata.create_all(self.engine)
+            nodes_table.create()
+            i = nodes_table.insert()
             for node in self.nodes:
-                i.execute({'client_id': self.nodes[node], 'client_name': node, 'last_ping': datetime.datetime.now()})
+                i.execute({'client_id': self.nodes[node], 'client_name': node, 'last_ping': datetime.datetime.now(), 'out_val': ""})
             
             
 
