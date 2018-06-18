@@ -1,26 +1,3 @@
-"""
-RemoteNode(PressurePlates)
-LocalNode(JungleCounter)
-RemoteNode(JungleLock)
-Trigger(PressurePlates, JungleCounter)
-Trigger(JungleCounter, JungleLock)
-
-RemoteNode(Dial)
-LocalNode(DialVal)
-Stream(Dial, DialVal, JungleDial)
-
-JSONIFY
-
-{"LocalNodes": ["JungleCounter", "DialVal"],
- "RemoteNodes": ["PressurePlates", "JungleLock", "Dial"],
- "Streams": ["JungleDial"]
- "Mappings": {"PressurePlates": ["JungleCounter"],
-              "JungleCounter": ["JungleLock"],
-              "Dial": ["DialVal"]}
-}
-
-
-"""
 
 DSLFILE = "connections.pzl"
 JSONFILE = "connections.json"
@@ -42,8 +19,7 @@ def DSLParse(dslfile=DSLFILE, jsonfile=JSONFILE):
 
     # initialize json dictionary components
     jsonDict = dict()
-    jsonDict["LocalNodes"] = list()
-    jsonDict["RemoteNodes"] = list()
+    jsonDict["Nodes"] = list()
     jsonDict["Streams"] = list()
     jsonDict["Mappings"] = defaultdict(list)
 
@@ -63,8 +39,8 @@ def DSLParse(dslfile=DSLFILE, jsonfile=JSONFILE):
         if category == "Stream" or category == "Trigger":
             jsonDict["Mappings"][data[0]].append(data[1])
 
-        else:
-            jsonDict[category + "s"].append(data[0])
+        if category == "Node":
+            jsonDict["Nodes"].append(data[0])
 
     with open(jsonfile, "w") as outfile:
         json.dump(jsonDict, outfile)

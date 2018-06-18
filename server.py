@@ -15,27 +15,20 @@ def welcome():
 def input(nodeName, value):
     outputNodes = pServer.mappings[nodeName]
     for outputNode in outputNodes:
-        if outputNode in pServer.localNodes:
-            nodeObj = getattr(serverlogic, outputNode)
-            change, nodeValue = nodeObj.compute(value)
-            if change:
-                input(outputNode, nodeObj.value)
-                pServer.localVals[outputNode] = nodeValue
-                print("Set local val {0} to {1}".format(outputNode, nodeValue))
-        elif outputNode in pServer.remoteNodes:
+        if outputNode in pServer.nodes:
             pServer.outputs[outputNode] = value
         else:
-            raise KeyError("{0} is not a local or remote node".format(outputNode))
+            raise KeyError("{0} is not a node".format(outputNode))
             # TODO: Change this to a http error code
     return "values set"
 
 
 @app.route("/output/<nodeName>")
 def output(nodeName):
-    if nodeName in pServer.remoteNodes:
+    if nodeName in pServer.nodes:
         return str(pServer.outputs[nodeName])
     else:
-        raise KeyError("{0} is not a remote node".format(nodeName))
+        raise KeyError("{0} is not a node".format(nodeName))
         # TODO: Change this to a http error code
 
 
@@ -53,8 +46,7 @@ class PuzzleServer:
     def __init__(self, filename):
         with open(filename, "r") as infile:
             connections = json.load(infile)
-        self.localNodes = set(connections["LocalNodes"])
-        self.remoteNodes = set(connections["RemoteNodes"])
+        self.nodes = set(connections["Nodes"])
         self.streams = connections["Streams"]
         self.mappings = connections["Mappings"]
         self.outputs = defaultdict(str)

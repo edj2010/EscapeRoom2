@@ -1,10 +1,10 @@
-RemoteNode(PressurePlates)
-LocalNode(JungleCounter)
-RemoteNode(JungleLock)
+Node(PressurePlates)
+Node(JungleCounter)
+Node(JungleLock)
 Trigger(PressurePlates, JungleCounter)
 Trigger(JungleCounter, JungleLock)
 
-RemoteNode(Dial)
-LocalNode(DialVal)
+Node(Dial)
+Node(DialVal)
 Stream(Dial, DialVal, JungleDial)
 
