@@ -1,14 +1,21 @@
 [[source]]
+
 url = "https://pypi.org/simple"
 name = "pypi"
 verify_ssl = true
 
+
 [requires]
+
 python_version = "3.6"
 
+
 [packages]
+
 flask = "*"
 black = "*"
 sqlalchemy = "*"
 
+
 [dev-packages]
+

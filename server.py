@@ -1,10 +1,14 @@
 import json
+from sqlalchemy import create_engine
 from collections import defaultdict
 import serverlogic
 from flask import Flask
+from db import heartbeats
+import datetime
 
 app = Flask(__name__)
 
+DB_EXISTS = True
 
 @app.route("/")
 def welcome():
@@ -13,6 +17,9 @@ def welcome():
 
 @app.route("/input/<nodeName>/<value>")
 def input(nodeName, value):
+    conn = pServer.engine.connect()        
+    stmt = heartbeats.update().where(heartbeats.c.client_name == nodeName).values(last_ping = datetime.datetime.now())
+    conn.execute(stmt)
     outputNodes = pServer.mappings[nodeName]
     for outputNode in outputNodes:
         if outputNode in pServer.nodes:
@@ -51,6 +58,11 @@ class PuzzleServer:
         self.mappings = connections["Mappings"]
         self.outputs = defaultdict(str)
         self.localVals = {}
+        self.engine = create_engine('sqlite:///server.db', echo=True)
+        if not DB_EXISTS:
+            i = heartbeat.insert()
+            for ind, node in enumerate(self.nodes):
+                i.execute({'client_id': ind, 'client_name': node, 'last_ping': datetime.datetime.now()})
 
 
 pServer = PuzzleServer("connections.json")
