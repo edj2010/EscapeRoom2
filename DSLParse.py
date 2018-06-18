@@ -1,4 +1,4 @@
-'''
+"""
 RemoteNode(PressurePlates)
 LocalNode(JungleCounter)
 RemoteNode(JungleLock)
@@ -20,7 +20,7 @@ JSONIFY
 }
 
 
-'''
+"""
 
 DSLFILE = "connections.pzl"
 JSONFILE = "connections.json"
@@ -28,24 +28,26 @@ JSONFILE = "connections.json"
 from collections import defaultdict
 import json
 
+
 def main():
     DSLParse()
 
-#parses dslfile and outputs to jsonfile
-def DSLParse(dslfile = DSLFILE, jsonfile = JSONFILE):
 
-    #read in dsl
-    with open(dslfile, 'r') as infile:
+# parses dslfile and outputs to jsonfile
+def DSLParse(dslfile=DSLFILE, jsonfile=JSONFILE):
+
+    # read in dsl
+    with open(dslfile, "r") as infile:
         dslLines = infile.readlines()
-    
-    #initialize json dictionary components
+
+    # initialize json dictionary components
     jsonDict = dict()
     jsonDict["LocalNodes"] = list()
     jsonDict["RemoteNodes"] = list()
     jsonDict["Streams"] = list()
     jsonDict["Mappings"] = defaultdict(list)
 
-    #parses each line of dslLines
+    # parses each line of dslLines
     for line in dslLines:
 
         if "(" not in line:
@@ -57,16 +59,15 @@ def DSLParse(dslfile = DSLFILE, jsonfile = JSONFILE):
 
         if category == "Stream":
             jsonDict["Streams"].append(data[2])
-        
+
         if category == "Stream" or category == "Trigger":
             jsonDict["Mappings"][data[0]].append(data[1])
 
         else:
-            jsonDict[category+"s"].append(data[0])
+            jsonDict[category + "s"].append(data[0])
 
-    with open(jsonfile, 'w') as outfile:
+    with open(jsonfile, "w") as outfile:
         json.dump(jsonDict, outfile)
-
 
 
 main()
