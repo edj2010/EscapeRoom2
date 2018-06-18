@@ -10,6 +10,8 @@ app = Flask(__name__)
 
 DB_EXISTS = True
 
+def heartbeatHandle()
+
 @app.route("/")
 def welcome():
     return "Welcome to our Escape Room."
@@ -53,16 +55,20 @@ class PuzzleServer:
     def __init__(self, filename):
         with open(filename, "r") as infile:
             connections = json.load(infile)
-        self.nodes = set(connections["Nodes"])
+        self.nodes = dict()
+        self.nodes[node] = ID for node,ID in enumerate(connection["Nodes"])
+        self.nodesconnections["Nodes"]
         self.streams = connections["Streams"]
         self.mappings = connections["Mappings"]
         self.outputs = defaultdict(str)
         self.localVals = {}
         self.engine = create_engine('sqlite:///server.db', echo=True)
-        if not DB_EXISTS:
+        if not self.engine.dialect.has_table(engine, 'heartbeats'):
+            heartbeats.create()
             i = heartbeat.insert()
             for ind, node in enumerate(self.nodes):
                 i.execute({'client_id': ind, 'client_name': node, 'last_ping': datetime.datetime.now()})
-
+            
+            
 
 pServer = PuzzleServer("connections.json")
