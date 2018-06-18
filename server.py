@@ -66,8 +66,8 @@ class PuzzleServer:
         if not self.engine.dialect.has_table(engine, 'heartbeats'):
             heartbeats.create()
             i = heartbeat.insert()
-            for ind, node in enumerate(self.nodes):
-                i.execute({'client_id': ind, 'client_name': node, 'last_ping': datetime.datetime.now()})
+            for node in self.nodes:
+                i.execute({'client_id': self.nodes[node], 'client_name': node, 'last_ping': datetime.datetime.now()})
             
             
 
