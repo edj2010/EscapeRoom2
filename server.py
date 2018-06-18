@@ -8,7 +8,11 @@ import datetime
 
 app = Flask(__name__)
 
-DB_EXISTS = True
+def heartbeatHandler(nodeName):
+    conn = pServer.engine.connect()
+    stmt = nodes_table.update().where(nodes_table.c.client_id == pServer.nodes[nodeName]).values(last_ping = datetime.datetime.now())
+    conn.execute(stmt)
+    
 
 @app.route("/")
 def welcome():
@@ -17,9 +21,7 @@ def welcome():
 
 @app.route("/input/<nodeName>/<value>")
 def input(nodeName, value):
-    conn = pServer.engine.connect()        
-    stmt = nodes_table.update().where(nodes_table.c.client_name == nodeName).values(last_ping = datetime.datetime.now())
-    conn.execute(stmt)
+    heartbeatHandler(nodeName)
     outputNodes = pServer.mappings[nodeName]
     for outputNode in outputNodes:
         if outputNode in pServer.nodes:
@@ -32,6 +34,7 @@ def input(nodeName, value):
 
 @app.route("/output/<nodeName>")
 def output(nodeName):
+    heartbeatHandler(nodeName)
     if nodeName in pServer.nodes:
         return str(pServer.outputs[nodeName])
     else:
@@ -39,8 +42,9 @@ def output(nodeName):
         # TODO: Change this to a http error code
 
 
-@app.route("/streamStatus/<streamController>")
-def streamStatus(streamController):
+@app.route("/streamStatus/<streamController>/<nodeName>")
+def streamStatus(streamController, nodeName):
+    heartbeatHandler(nodeName)
     if streamController in pServer.streams:
         streamControllerObj = getattr(serverlogic, streamController)
         return str(streamControllerObj.isActive(pServer.localVals, None))
@@ -53,7 +57,7 @@ class PuzzleServer:
     def __init__(self, filename):
         with open(filename, "r") as infile:
             connections = json.load(infile)
-        self.nodes = {node:ID for node,ID in enumerate(connections["Nodes"])}
+        self.nodes = {node:ID for ID, node in enumerate(connections["Nodes"])}
         self.streams = connections["Streams"]
         self.mappings = connections["Mappings"]
         self.outputs = defaultdict(str)
@@ -62,7 +66,6 @@ class PuzzleServer:
         if not self.engine.dialect.has_table(self.engine, 'nodes_table'):
             metadata.bind = self.engine
             metadata.create_all(self.engine)
-            nodes_table.create()
             i = nodes_table.insert()
             for node in self.nodes:
                 i.execute({'client_id': self.nodes[node], 'client_name': node, 'last_ping': datetime.datetime.now(), 'out_val': ""})

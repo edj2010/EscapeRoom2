@@ -1,5 +1,4 @@
 from sqlalchemy import *
-DB_EXISTS = True
 
 metadata = MetaData()
 
