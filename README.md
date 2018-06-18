@@ -47,6 +47,7 @@ JSON formatted as follows:
  "Streams": ["JungleDial"],
  "Mappings": {"PressurePlates": ["JungleCounter"],
               "JungleCounter": ["JungleLock"],
-              "Dial": ["DialVal"]}}
+              "Dial": ["DialVal"]
+             }
 }
 ```
