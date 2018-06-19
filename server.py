@@ -10,6 +10,11 @@ app = Flask(__name__)
 
 
 def heartbeatHandler(nodeName):
+    """
+    sets the last_ping value for a given node to the current time.
+    This is used to track if any nodes become unresponsive
+    """
+
     conn = pServer.engine.connect()
     stmt = (
         nodes_table.update()
@@ -21,11 +26,18 @@ def heartbeatHandler(nodeName):
 
 @app.route("/")
 def welcome():
+    """
+    Generic landing screen
+    """
     return "Welcome to our Escape Room."
 
 
 @app.route("/input/<nodeName>/<value>")
 def input(nodeName, value):
+    """
+    Given a node and a value, looks up the trigger that the node inputs to, and sends
+    the value passed to the out_val for the trigger's output node
+    """
     heartbeatHandler(nodeName)
     outputNodes = pServer.mappings[nodeName]
     for outputNode in outputNodes:
@@ -45,6 +57,7 @@ def input(nodeName, value):
 
 @app.route("/output/<nodeName>")
 def output(nodeName):
+    """Retrieves the out_val for a given node"""
     heartbeatHandler(nodeName)
     if nodeName in pServer.nodes:
         conn = pServer.engine.connect()
@@ -58,6 +71,7 @@ def output(nodeName):
 
 @app.route("/streamStatus/<streamController>/<nodeName>")
 def streamStatus(streamController, nodeName):
+    """Checks whether a given stream is active or not"""
     heartbeatHandler(nodeName)
     if streamController in pServer.streams:
         streamControllerObj = getattr(serverlogic, streamController)
