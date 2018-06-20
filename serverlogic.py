@@ -1,19 +1,4 @@
-from helperClasses import LocalNode
 from helperClasses import StreamController
-
-
-class JungleCounterClass(LocalNode):
-    def __init__(self):
-        super().__init__("JungleCounter", 0)
-        self.jungleSet = set()
-
-    def compute(self, value):
-        self.jungleSet.add(value)
-        self.update(len(self.jungleSet))
-        return self.change, self.value
-
-
-JungleCounter = JungleCounterClass()
 
 
 class JungleDialClass(StreamController):
