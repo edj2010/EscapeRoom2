@@ -43,7 +43,7 @@ Dependancy(End, JungleUnlocked)
 
 DSL information converted to JSON for parsing by server
 JSON formatted as follows:
-```json
+```
 {"Nodes": [list, of, node, names],
  "Streams": [list, of, stream, controller, names],
  "Mappings": {inputNodeName: [output, node, names], ...},
