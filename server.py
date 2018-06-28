@@ -107,3 +107,6 @@ class PuzzleServer:
 
 
 pServer = PuzzleServer("connections.json")
+
+if __name__ == "__main__":
+    app.run(threaded=True)
