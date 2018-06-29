@@ -8,3 +8,6 @@ Node(Dial)
 Node(DialVal)
 Stream(Dial, DialVal, JungleDial)
 
+State(JungleUnlocked)
+Dependancy(JungleUnlocked, Begin)
+Dependancy(End, JungleUnlocked)

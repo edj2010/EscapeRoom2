@@ -7,8 +7,11 @@ import json
 
 
 def main():
-    DSLParse()
-
+    try:
+        DSLParse()
+    except:
+        print("Formatting Error in " + DSLFILE + ". parsing terminated, failed to create " + JSONFILE)
+        #TODO create more descriptive error message for identifying erroring line
 
 # parses dslfile and outputs to jsonfile
 def DSLParse(dslfile=DSLFILE, jsonfile=JSONFILE):
@@ -22,7 +25,11 @@ def DSLParse(dslfile=DSLFILE, jsonfile=JSONFILE):
     jsonDict["Nodes"] = list()
     jsonDict["Streams"] = list()
     jsonDict["Mappings"] = defaultdict(list)
-
+    jsonDict["States"] = ["Begin", "End"]
+    jsonDict["Dependants"] = defaultdict(list)
+    jsonDict["Dependancies"] = defaultdict(list)
+    
+    
     # parses each line of dslLines
     for line in dslLines:
 
@@ -42,8 +49,23 @@ def DSLParse(dslfile=DSLFILE, jsonfile=JSONFILE):
         if category == "Node":
             jsonDict["Nodes"].append(data[0])
 
+        if category == "State":
+            jsonDict["States"].append(data[0])
+
+        if category == "Dependancy":
+            if len(data) == 2:
+                jsonDict["Dependancies"][data[0]] = ["AND", data[1]]
+                jsonDict["Dependants"][data[1]].append(data[0])
+            else:
+                jsonDict["Dependancies"][data[0]] = data[1:]
+                for inputState in data[2:]:
+                    jsonDict["Dependants"][inputState].append(data[0])
+
     with open(jsonfile, "w") as outfile:
         json.dump(jsonDict, outfile)
 
-
-main()
+# Only have one of these uncommented at a time
+# for standard use have main() uncommented
+# for debugging, have DSLParse() uncommented
+#main()
+DSLParse()
