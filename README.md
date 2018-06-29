@@ -6,16 +6,22 @@
 
 
 ## DSL Format
-Three types of statements. Two connection types and node
+Five types of statements. Three connection types, node, and state
 
-Node(nodeName)
+`Node(nodeName)`
 External device sending and recieving data.
 
-Trigger(triggerNode, targetNode)
-Defines a flow of information, that forwards values input by the trigger node to the target node.
+`Trigger(triggerNode, targetNode)`
+Defines a flow of information, that forwards values input by the triggerNode to the targetNode.
 
-Stream(triggerNode, targetNode, streamController)
+`Stream(triggerNode, targetNode, streamController)`
 Streams are triggers that also create an 'isActive' API endpoint, which calls a user provided function. This should be used to turn on high frequency data flows (ie every .5 seconds) only when they are needed.
+
+`State(stateName)`
+Game state node, used for tracking progress in the room. (states Begin and End are declared implicitely)
+
+`Dependency(outState, funcName, inputState1, inputState2, ...)`
+defines a dependancy, where out state goes from inactive to active if funcName returns true given the statuses of inputState1, ... inputStateN. Checked anytime one of the input states is finished. funcName must be defined in gameStateLogic.py (unless it is AND or OR, which are already defined). funcName can be ommitted if only one inputState (then it's just if a then b)
 
 #### Example
 ```
@@ -28,18 +34,29 @@ Trigger(JungleCounter, JungleLock)
 Node(Dial)
 Node(DialOut)
 Stream(Dial, DialOut, JungleDial)
+
+State(JungleUnlocked)
+Dependancy(JungleUnlocked, Begin)
+Dependancy(End, JungleUnlocked)
 ```
 ## JSON format
 
 DSL information converted to JSON for parsing by server
 JSON formatted as follows:
+```
 {"Nodes": [list, of, node, names],
  "Streams": [list, of, stream, controller, names],
- "Mappings": {inputNodeName: [output, node, names]}}
-
-"Nodes" is a list of all nodes in the system
+ "Mappings": {inputNodeName: [output, node, names], ...},
+ "States": [list, of, state, names],
+ "Dependants": {inputState: [output, state, names], ...},
+ "Dependancies": {outputState: [funcName, input, state, names]}}
+```
+"Nodes" is a list of all nodes in the room
 "Streams" is a list of all stream controller names
 "Mappings" is a list of all trigger and stream mapping information (if information is available for input, which outputs do I update
+"States" is a list of all state names
+"Dependants" is a list of all input states, and the output nodes that depend on them
+"Dependancies" is a list of all output states, funcName/input states required to activate it
 
 ##### Example (from above DSL)
 ```json
@@ -48,7 +65,14 @@ JSON formatted as follows:
  "Mappings": {"PressurePlates": ["JungleCounter"],
               "JungleCounter": ["JungleLock"],
               "Dial": ["DialOut"]
-             }
+             },
+ "States": ["Begin", "JungleUnlocked", "End"],
+ "Dependants": {"Begin": ["JungleUnlocked"],
+                "JungleUnlocked": ["End"]
+               },
+ "Dependancies": {"JungleUnlocked": ["AND", "Begin"],
+                  "End": ["AND", "JungleUnlocked"]
+                 }
 }
 ```
 
