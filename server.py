@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, select
 from collections import defaultdict
 import serverlogic
 import gameStateLogic
+from gameStateLogic import INACTIVE, ACTIVE, FINISHED
 from flask import Flask
 from models import game_state_table, nodes_table, metadata
 import datetime
@@ -10,14 +11,11 @@ import datetime
 app = Flask(__name__)
 
 # Game State constants
-INACTIVE = -1
-ACTIVE = 0
-FINISHED = 1
 INACTIVE_COLOR = "grey73"
-ACTIVE_COLOR = "yellow"
-FINISHED_COLOR = "green"
-ERROR_COLOR = "red"
-FUNC_COLOR = "navy"
+ACTIVE_COLOR = "gold1"
+FINISHED_COLOR = "darkolivegreen3"
+ERROR_COLOR = "indianred3"
+FUNC_COLOR = "skyblue"
 
 def heartbeatHandler(nodeName):
     """
@@ -83,7 +81,10 @@ def output(nodeName):
 
 @app.route("/streamStatus/<streamController>/<nodeName>")
 def streamStatus(streamController, nodeName):
-    """Checks whether a given stream is active or not"""
+    """
+    Checks whether a given stream is active or not
+    Requires nodeName to update heartbeat
+    """
     heartbeatHandler(nodeName)
     if streamController in pServer.streams:
         streamControllerObj = getattr(serverlogic, streamController)
@@ -94,9 +95,14 @@ def streamStatus(streamController, nodeName):
 
 @app.route("/gameState/<gameState>/<nodeName>/<status>")
 def updateGameState(gameState, nodeName, status):
+    """
+    API for ESP updating gamestate
+    Requires nodeName to update heartbeat
+    """
     heartbeatHandler(nodeName)
     if gameState in pServer.states:
         pServer.setState(gameState, int(status))
+        print(pServer)
     else:
         raise KeyError("{0} is not a game state".format(gameState))
         # TODO: Change this to a http error code
@@ -176,12 +182,17 @@ class PuzzleServer:
         return results.fetchone()["status"]
 
     def setState(self, stateName, newStatus):
+        """
+        Sets the status of a given state. If status is FINISHED, updates the statuses
+        of dependant nodes based on their respective activation functions.
+        """
         self._updateState(stateName, newStatus)
         if newStatus == FINISHED:
             for nextState in self.dependants[stateName]:
                 args = [self.getState(state) for state in self.dependancies[nextState][1:]]
                 func = getattr(gameStateLogic, self.dependancies[nextState][0])
-                self._updateState(nextState, ACTIVE)
+                if(func(args)):
+                    self._updateState(nextState, ACTIVE)
 
     def _color(self, status):
         if status == INACTIVE:
@@ -194,17 +205,37 @@ class PuzzleServer:
             return ERROR_COLOR
 
     def _getGraph(self, gameStates, dependants):
+        """
+        Constructs a graphviz format graph of the game state and returns it
+        """
+        funcNameCount = defaultdict(int)
+
+        def getFuncName(name):
+            n = name + str(funcNameCount[name])
+            funcNameCount[name]+=1
+            return n
+
+        uniqueFuncNames = {name: getFuncName(self.dependancies[name][0]) for name in self.dependancies}
+        
         g = "digraph gameStates {"
         g += "".join([state + " [style=filled, fillcolor=" + self._color(gameStates[state]) + "];"
                                                         for state in gameStates])
-        g += "".join([(state + " -> " + dState + ";")   for state in dependants
+        g += "".join([func + " [style=filled, fillcolor=" + FUNC_COLOR + "];" for func in uniqueFuncNames.values()])
+        g += "".join([uniqueFuncNames[state] + " -> " + state + ";"
+                                                        for state in self.dependancies])
+        g += "".join([state + " -> " + uniqueFuncNames[dState] + ";"
+                                                        for state in self.dependants
                                                         for dState in dependants[state]])
         return g + "}"
 
     def __str__(self):
+        """
+        toString method for puzzle server
+        Currently just prints graph of game states in dict and graph form
+        """
         gameStates = {state: self.getState(state) for state in self.states}
-        print(gameStates)
-        g = self._getGraph(gameStates, self.dependants)
+        g = str(gameStates) + "\n"
+        g+= self._getGraph(gameStates, self.dependants)
         return g
 
 pServer = PuzzleServer("connections.json")
