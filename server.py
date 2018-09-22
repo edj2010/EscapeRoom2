@@ -7,6 +7,8 @@ from gameStateLogic import INACTIVE, ACTIVE, FINISHED
 from flask import Flask
 from models import game_state_table, nodes_table, metadata
 import datetime
+import simpleaudio as sa
+import wave
 
 app = Flask(__name__)
 
@@ -16,6 +18,8 @@ ACTIVE_COLOR = "gold1"
 FINISHED_COLOR = "darkolivegreen3"
 ERROR_COLOR = "indianred3"
 FUNC_COLOR = "skyblue"
+
+AUDIO_PATH = "Sound/"
 
 def heartbeatHandler(nodeName):
     """
@@ -79,8 +83,8 @@ def output(nodeName):
         # TODO: Change this to a http error code
 
 
-@app.route("/streamStatus/<streamController>/<nodeName>")
-def streamStatus(streamController, nodeName):
+@app.route("/streamStatus/<nodeName>/<streamController>")
+def streamStatus(nodeName, streamController):
     """
     Checks whether a given stream is active or not
     Requires nodeName to update heartbeat
@@ -93,8 +97,8 @@ def streamStatus(streamController, nodeName):
         raise KeyError("{0} is not a stream controller".format(streamController))
         # TODO: Change this to a http error code
 
-@app.route("/gameState/<gameState>/<nodeName>/<status>")
-def updateGameState(gameState, nodeName, status):
+@app.route("/gameState/<nodeName>/<gameState>/<status>")
+def updateGameState(nodeName, gameState, status):
     """
     API for ESP updating gamestate
     Requires nodeName to update heartbeat
@@ -107,6 +111,19 @@ def updateGameState(gameState, nodeName, status):
         raise KeyError("{0} is not a game state".format(gameState))
         # TODO: Change this to a http error code
     return "game state set"
+
+@app.route("/playAudio/<nodeName>/<audioFile>")
+def playAudio(nodeName, audioFile):
+    """
+    Interface used by the nodes to play audio from the server
+    Audio selected by file name and stored on the server computer
+    """
+    heartbeatHandler(nodeName)
+    # TODO: ensure that multiple web workers running will not interfere
+    wav_obj = sa.WaveObject.from_wave_file(AUDIO_PATH + audioFile)
+    play_obj = wav_obj.play()
+    play_obj.wait_done()
+    return "Audio Completed"
 
 class PuzzleServer:
 
@@ -121,6 +138,7 @@ class PuzzleServer:
         
         # node information
         self.nodes = {name: ID for ID, name in enumerate(connections["Nodes"])}
+        print(self.nodes)
         self.streams = connections["Streams"]
         self.mappings = connections["Mappings"]
         

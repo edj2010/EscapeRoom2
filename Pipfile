@@ -15,7 +15,7 @@ python_version = "3.6"
 flask = "*"
 black = "*"
 sqlalchemy = "*"
-
+simpleaudio = "*"
 
 [dev-packages]
 
