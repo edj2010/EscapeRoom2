@@ -5,12 +5,13 @@ import serverlogic
 import gameStateLogic
 from gameStateLogic import INACTIVE, ACTIVE, FINISHED
 from flask import Flask
+from flask import render_template, jsonify
 from models import game_state_table, nodes_table, metadata
 import datetime
 import simpleaudio as sa
 import wave
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder = "../static/dist", template_folder = "../static")
 
 # Game State constants
 INACTIVE_COLOR = "grey73"
@@ -19,7 +20,7 @@ FINISHED_COLOR = "darkolivegreen3"
 ERROR_COLOR = "indianred3"
 FUNC_COLOR = "skyblue"
 
-AUDIO_PATH = "Sound/"
+AUDIO_PATH = "../Sound/"
 
 def heartbeatHandler(nodeName):
     """
