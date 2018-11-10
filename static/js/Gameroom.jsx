@@ -10,19 +10,26 @@ export default class Gameroom extends Component {
     constructor(props){
         super(props);
         this.state = {
-            hint_text = "";
-            hint_exists = false;
-            hint_duration = 0;
+            hint_text: "",
+            hint_exists: false,
 
-            time = 0;
-            paused = false;
+            time: 100,
+            paused: false,
             
-            gamestate = "unstarted"
+            gamestate: "unstarted"
         };
     }
 
     render() {
-        if (this.state.hint_exists)
+        if (this.gamestate === "unstarted")
+        {
+            return(
+            <div className="Gameroom">
+                <p> Please wait for the game to start. </p>
+            </div>
+            );
+        }
+        else if (this.state.hint_exists)
         {
             return (
             <div className="Gameroom">

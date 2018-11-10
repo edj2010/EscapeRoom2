@@ -22,109 +22,6 @@ FUNC_COLOR = "skyblue"
 
 AUDIO_PATH = "../Sound/"
 
-def heartbeatHandler(nodeName):
-    """
-    sets the last_ping value for a given node to the current time.
-    This is used to track if any nodes become unresponsive
-    """
-    if nodeName in pServer.nodes:
-        conn = pServer.engine.connect()
-        stmt = (
-            nodes_table.update()
-            .where(nodes_table.c.client_id == pServer.nodes[nodeName])
-            .values(last_ping=datetime.datetime.now())
-        )
-        conn.execute(stmt)
-    else:
-        raise KeyError("{0} is not a node".format(nodeName))
-        # TODO: Change this to a http error code
-
-@app.route("/")
-def welcome():
-    """
-    Generic landing screen
-    """
-    return "Welcome to our Escape Room."
-
-
-@app.route("/input/<nodeName>/<value>")
-def input(nodeName, value):
-    """
-    Given a node and a value, looks up the trigger that the node inputs to, and sends
-    the value passed to the out_val for the trigger's output node
-    """
-    heartbeatHandler(nodeName)
-    outputNodes = pServer.mappings[nodeName]
-    for outputNode in outputNodes:
-        if outputNode in pServer.nodes:
-            conn = pServer.engine.connect()
-            updtStmt = (
-                nodes_table.update()
-                .where(nodes_table.c.client_id == pServer.nodes[outputNode])
-                .values(out_val=value)
-            )
-            conn.execute(updtStmt)
-        else:
-            raise KeyError("{0} is not a node".format(outputNode))
-            # TODO: Change this to a http error code
-    return "values set"
-
-
-@app.route("/output/<nodeName>")
-def output(nodeName):
-    """Retrieves the out_val for a given node"""
-    heartbeatHandler(nodeName)
-    if nodeName in pServer.nodes:
-        conn = pServer.engine.connect()
-        selStmt = select([nodes_table]).where(nodes_table.c.client_name == nodeName)
-        results = conn.execute(selStmt)
-        return results.fetchone()["out_val"]
-    else:
-        raise KeyError("{0} is not a node".format(nodeName))
-        # TODO: Change this to a http error code
-
-
-@app.route("/streamStatus/<nodeName>/<streamController>")
-def streamStatus(nodeName, streamController):
-    """
-    Checks whether a given stream is active or not
-    Requires nodeName to update heartbeat
-    """
-    heartbeatHandler(nodeName)
-    if streamController in pServer.streams:
-        streamControllerObj = getattr(serverlogic, streamController)
-        return str(streamControllerObj.isActive(pServer, None))
-    else:
-        raise KeyError("{0} is not a stream controller".format(streamController))
-        # TODO: Change this to a http error code
-
-@app.route("/gameState/<nodeName>/<gameState>/<status>")
-def updateGameState(nodeName, gameState, status):
-    """
-    API for ESP updating gamestate
-    Requires nodeName to update heartbeat
-    """
-    heartbeatHandler(nodeName)
-    if gameState in pServer.states:
-        pServer.setState(gameState, int(status))
-        print(pServer)
-    else:
-        raise KeyError("{0} is not a game state".format(gameState))
-        # TODO: Change this to a http error code
-    return "game state set"
-
-@app.route("/playAudio/<nodeName>/<audioFile>")
-def playAudio(nodeName, audioFile):
-    """
-    Interface used by the nodes to play audio from the server
-    Audio selected by file name and stored on the server computer
-    """
-    heartbeatHandler(nodeName)
-    # TODO: ensure that multiple web workers running will not interfere
-    wav_obj = sa.WaveObject.from_wave_file(AUDIO_PATH + audioFile)
-    play_obj = wav_obj.play()
-    play_obj.wait_done()
-    return "Audio Completed"
 
 class PuzzleServer:
 
@@ -258,6 +155,134 @@ class PuzzleServer:
         return g
 
 pServer = PuzzleServer("connections.json")
+
+
+
+## GUI
+@app.route("/")
+def gameroom():
+    """
+    Generic landing screen
+    """
+    return render_template("index.html")
+
+@app.route("/controlroom")
+def controlRoom():
+    """
+    Control Room landing screen
+    """
+    return render_template("controlroom.html")
+
+
+## Server API
+@app.route("/getdata")
+def getData():
+    """
+    Get server state
+    """
+    return jsonify({'hint_text': "Blank Text",
+                    'hint_exists': True,
+                    'time': 7200,
+                    'paused': True,
+                    'gamestate': "ongoing"})
+
+
+## ESP API
+def heartbeatHandler(nodeName):
+    """
+    sets the last_ping value for a given node to the current time.
+    This is used to track if any nodes become unresponsive
+    """
+    if nodeName in pServer.nodes:
+        conn = pServer.engine.connect()
+        stmt = (
+            nodes_table.update()
+            .where(nodes_table.c.client_id == pServer.nodes[nodeName])
+            .values(last_ping=datetime.datetime.now())
+        )
+        conn.execute(stmt)
+    else:
+        raise KeyError("{0} is not a node".format(nodeName))
+        # TODO: Change this to a http error code
+
+@app.route("/input/<nodeName>/<value>")
+def input(nodeName, value):
+    """
+    Given a node and a value, looks up the trigger that the node inputs to, and sends
+    the value passed to the out_val for the trigger's output node
+    """
+    heartbeatHandler(nodeName)
+    outputNodes = pServer.mappings[nodeName]
+    for outputNode in outputNodes:
+        if outputNode in pServer.nodes:
+            conn = pServer.engine.connect()
+            updtStmt = (
+                nodes_table.update()
+                .where(nodes_table.c.client_id == pServer.nodes[outputNode])
+                .values(out_val=value)
+            )
+            conn.execute(updtStmt)
+        else:
+            raise KeyError("{0} is not a node".format(outputNode))
+            # TODO: Change this to a http error code
+    return "values set"
+
+
+@app.route("/output/<nodeName>")
+def output(nodeName):
+    """Retrieves the out_val for a given node"""
+    heartbeatHandler(nodeName)
+    if nodeName in pServer.nodes:
+        conn = pServer.engine.connect()
+        selStmt = select([nodes_table]).where(nodes_table.c.client_name == nodeName)
+        results = conn.execute(selStmt)
+        return results.fetchone()["out_val"]
+    else:
+        raise KeyError("{0} is not a node".format(nodeName))
+        # TODO: Change this to a http error code
+
+
+@app.route("/streamStatus/<nodeName>/<streamController>")
+def streamStatus(nodeName, streamController):
+    """
+    Checks whether a given stream is active or not
+    Requires nodeName to update heartbeat
+    """
+    heartbeatHandler(nodeName)
+    if streamController in pServer.streams:
+        streamControllerObj = getattr(serverlogic, streamController)
+        return str(streamControllerObj.isActive(pServer, None))
+    else:
+        raise KeyError("{0} is not a stream controller".format(streamController))
+        # TODO: Change this to a http error code
+
+@app.route("/gameState/<nodeName>/<gameState>/<status>")
+def updateGameState(nodeName, gameState, status):
+    """
+    API for ESP updating gamestate
+    Requires nodeName to update heartbeat
+    """
+    heartbeatHandler(nodeName)
+    if gameState in pServer.states:
+        pServer.setState(gameState, int(status))
+        print(pServer)
+    else:
+        raise KeyError("{0} is not a game state".format(gameState))
+        # TODO: Change this to a http error code
+    return "game state set"
+
+@app.route("/playAudio/<nodeName>/<audioFile>")
+def playAudio(nodeName, audioFile):
+    """
+    Interface used by the nodes to play audio from the server
+    Audio selected by file name and stored on the server computer
+    """
+    heartbeatHandler(nodeName)
+    # TODO: ensure that multiple web workers running will not interfere
+    wav_obj = sa.WaveObject.from_wave_file(AUDIO_PATH + audioFile)
+    play_obj = wav_obj.play()
+    play_obj.wait_done()
+    return "Audio Completed"
 
 if __name__ == "__main__":
     app.run(threaded=True)

@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import App from "./App";
+import Gameroom from "./Gameroom";
 
-ReactDOM.render(<App />, document.getElementById("content"));
+ReactDOM.render(<Gameroom />, document.getElementById("content"));
 
