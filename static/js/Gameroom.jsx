@@ -38,6 +38,14 @@ export default class Gameroom extends Component {
             </div>
             );
         }
+        else if (this.state.gamestate === "out_of_time")
+        {
+            return(
+            <div className="Gameroom">
+                <p> Oh No!! You ran out of time! </p>
+            </div>
+            );
+        }
         else if (this.state.hint_exists)
         {
             return (

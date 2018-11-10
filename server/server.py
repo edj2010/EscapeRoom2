@@ -109,15 +109,17 @@ class PuzzleServer:
         """
         Starts the game, initializes the start timer
         """
-        conn = self.enging.connect()
+        conn = self.engine.connect()
         updtStmt = (
             gameroom_table.update()
             .where(gameroom_table.c.gameroom_id == 1)
-            .values(start_time = int(time.time()),
-                    gamestate = "ongoing",
-                    paused = False
-                    )
-        )
+            .values({'start_time': int(time.time()),
+                     'gamestate': "ongoing",
+                     'paused': False
+                    })
+            )
+        conn.execute(updtStmt)
+        conn.close()
 
     def getRoomInfo(self):
         """

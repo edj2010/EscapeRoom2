@@ -56,7 +56,7 @@ export default class Control extends Component {
     }
 
     startGame() {
-        axios.get(`http://${BASE_URL}/controls/start`)
+        axios.get(`http://${BASE_URL}/start`)
             .then(function (response) {
                 console.log(response);
             })
@@ -90,6 +90,7 @@ export default class Control extends Component {
     axios.get(`http://${BASE_URL}/getdata`)
       .then(res => {
         let data = res["data"];
+        console.log(data);
         this.setState({time: Number(data["time"]), gameState: data["gamestate"]});
       });
     }
