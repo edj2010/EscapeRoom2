@@ -60,6 +60,7 @@ def DSLParse(dslfile=DSLFILE, jsonfile=JSONFILE):
                 jsonDict["Dependancies"][data[0]] = data[1:]
                 for inputState in data[2:]:
                     jsonDict["Dependants"][inputState].append(data[0])
+    jsonDict["Dependants"]["End"] = []
 
     with open(jsonfile, "w") as outfile:
         json.dump(jsonDict, outfile)
