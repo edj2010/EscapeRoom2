@@ -183,6 +183,7 @@ def getData():
     return jsonify({'hint_text': "Blank Text",
                     'hint_exists': True,
                     'time': 7200,
+                    'hint_timer': 30,
                     'paused': True,
                     'gamestate': "ongoing"})
 
