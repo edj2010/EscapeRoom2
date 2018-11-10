@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
 import Timer from 'react.timer';
+import Graph from 'react-graph-vis';
+import vis from 'vis';
 
 //let BASE_URL = "ogillespie.pythonanywhere.com";
 let BASE_URL = "localhost:5000";
@@ -25,11 +27,12 @@ export default class Control extends Component {
                     <button onClick={evt =>this.startGame()}>Start Game</button>
                 </div>
             );
-        } else if(this.state.gameState==="start"){
+        } else if(this.state.gameState==="ongoing"){
             return(
                 <div>
                     <TimerWrapper time={this.state.time} state={this.props.gameState}/>
                     <PuzzleList/>
+                    <PuzzleGraph/>
                 </div>
             );
         } else if(this.state.gameState==="completed"){
@@ -84,13 +87,10 @@ export default class Control extends Component {
 
   checkServerState(){
     console.log("getting data");
-    axios.get(`http://${BASE_URL}/display`)
+    axios.get(`http://${BASE_URL}/getdata`)
       .then(res => {
         let data = res["data"];
-        let newState = data["state"];
-        this.setState({time: Number(data["time"]),
-                        urlPlaying: data["url"],
-                        gameState: newState});
+        this.setState({time: Number(data["time"]), gameState: data["gamestate"]});
       });
     }
   }
@@ -133,24 +133,18 @@ class PuzzleList extends Component {
 
     checkPuzzles(){
         console.log("check available puzzles");
-        axios.get(`http://${BASE_URL}/puzzles/available`)
+        axios.get(`http://${BASE_URL}/nodeStates`)
             .then(res => {
                 let data = res["data"];
                 console.log(data);
                 this.setState(
-                    {availablePuzzles: data});
-                });
-        axios.get(`http://${BASE_URL}/puzzles/solved`)
-            .then(res => {
-                let data = res["data"];
-                console.log(data);
-                this.setState(
-                    {solvedPuzzles: data});
+                    {availablePuzzles: data["active"],
+                    solvedPuzzles: data["finished"]});
                 });
     }
 
     completePuzzle(puzzleName){
-        axios.get(`http://${BASE_URL}/puzzles/complete/${puzzleName}`)
+        axios.get(`http://${BASE_URL}/gameState/${puzzleName}/1`)
         .then(function (response) {
             console.log(response);
         })
@@ -163,12 +157,12 @@ class PuzzleList extends Component {
 
     render(){
         let listItems = this.state.availablePuzzles.map((puzzleInfo) =>
-            <li key={puzzleInfo["puzzleID"].toString()}>
+            <li key={puzzleInfo["id"].toString()}>
                 <button onClick={evt => this.completePuzzle(puzzleInfo["name"])}> {puzzleInfo["name"]}</button>
             </li>
         );
         let solvedListItems = this.state.solvedPuzzles.map((puzzleInfo) =>
-            <li key={puzzleInfo["puzzleID"].toString()}>
+            <li key={puzzleInfo["id"].toString()}>
                 <p> {puzzleInfo["name"]}</p>
             </li>
         );
@@ -181,5 +175,71 @@ class PuzzleList extends Component {
             </div>
         );
     }
+
+}
+
+class PuzzleGraph extends Component {
+    constructor(props){
+        super(props);
+        this.state = {nodes: [], edges: []};
+        this.network = {};
+        this.setNetworkInstance = this.setNetworkInstance.bind(this);
+        this.initializeGraph();
+    };
+
+    initializeGraph() {
+        axios.get(`http://${BASE_URL}/graph`)
+             .then(res => {
+                 console.log(res);
+                 let parsedData = vis.network.convertDot(res["data"]);
+                 this.setState({nodes: parsedData.nodes, edges: parsedData.edges});
+             })
+    }
+
+    setNetworkInstance(nw) {
+        this.network = nw;
+        console.log("got network");
+        console.log(this.network)
+    };
+
+    completeNode(node) {
+        axios.get(`http://${BASE_URL}/gameState/${node.label}/1`);
+    }
+
+    render(){
+        const options = {
+            layout: {
+                hierarchical: true
+            },
+            edges: {
+                color: "#000000"
+            }
+        };
+
+        const events = {
+            click: function(event) {
+                console.log("completing nodes:");
+                console.log(event.nodes);
+                var clickedNode = this.network.body.data.nodes.get(event.nodes[0]);
+                this.completeNode(clickedNode);
+                console.log(clickedNode);
+                clickedNode.color = {
+                    border: '#000000',
+                    background: '#DC6E56',
+                    highlight: {
+                        border: '#2B7CE9',
+                        background: '#D2E5FF'
+                    }
+                };
+                this.network.body.data.nodes.update(clickedNode);
+                for (var nodeID in event.nodes) {
+                    console.log(nodeID)
+                    console.log("test")
+                }
+            }.bind(this)
+        };
+        var graph = {nodes: this.state.nodes, edges: this.state.edges};
+        return(<Graph graph={graph} options={options} events={events} style={{ height: "640px" }} getNetwork={this.setNetworkInstance}/>)
+    };
 
 }

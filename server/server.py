@@ -33,13 +33,13 @@ class PuzzleServer:
         """
         with open(filename, "r") as infile:
             connections = json.load(infile)
-        
+
         # node information
         self.nodes = {name: ID for ID, name in enumerate(connections["Nodes"])}
         print(self.nodes)
         self.streams = connections["Streams"]
         self.mappings = connections["Mappings"]
-        
+
         # game state information
         self.states = {name: ID for ID, name in enumerate(connections["States"])}
         self.dependants = connections["Dependants"]
@@ -60,7 +60,7 @@ class PuzzleServer:
                         "out_val": "",
                     }
                 )
-        
+
         # initialize game state table
         if not self.engine.dialect.has_table(self.engine, "game_state_table"):
             game_state_table.create(self.engine)
@@ -73,7 +73,7 @@ class PuzzleServer:
                         "status": INACTIVE, 
                     }
                 )
-    
+
     def _updateState(self, stateName, newStatus):
         """
         Internal method used to update the status of a game state.
@@ -114,7 +114,7 @@ class PuzzleServer:
         conn = self.engine.connect()
         selStmt = select([game_state_table]).where(game_state_table.c.status == status)
         results = conn.execute(selStmt)
-        return results.fetchall()
+        return list(results.fetchall())
 
     def _color(self, status):
         if status == INACTIVE:
@@ -138,7 +138,7 @@ class PuzzleServer:
             return n
 
         uniqueFuncNames = {name: getFuncName(self.dependancies[name][0]) for name in self.dependancies}
-        
+
         g = "digraph gameStates {"
         g += "".join([state + " [style=filled, fillcolor=" + self._color(gameStates[state]) + "];"
                                                         for state in gameStates])
@@ -156,9 +156,7 @@ class PuzzleServer:
         Currently just prints graph of game states in dict and graph form
         """
         gameStates = {state: self.getState(state) for state in self.states}
-        g = str(gameStates) + "\n"
-        g+= self._getGraph(gameStates, self.dependants)
-        return g
+        return self._getGraph(gameStates, self.dependants)
 
 pServer = PuzzleServer("connections.json")
 
@@ -262,13 +260,20 @@ def streamStatus(nodeName, streamController):
         raise KeyError("{0} is not a stream controller".format(streamController))
         # TODO: Change this to a http error code
 
-@app.route("/gameState/<nodeName>/<gameState>/<status>")
-def updateGameState(nodeName, gameState, status):
+@app.route("/gameStateESP/<nodeName>/<gameState>/<status>")
+def updateGameStateESP(nodeName, gameState, status):
     """
     API for ESP updating gamestate
     Requires nodeName to update heartbeat
     """
     heartbeatHandler(nodeName)
+    return updateGameState(gameState, status)
+
+@app.route("/gameState/<gameState>/<status>")
+def updateGameState(gameState, status):
+    """
+    API for updating gamestate from web
+    """
     if gameState in pServer.states:
         pServer.setState(gameState, int(status))
         print(pServer)
@@ -290,11 +295,16 @@ def playAudio(nodeName, audioFile):
     play_obj.wait_done()
     return "Audio Completed"
 
+@app.route("/graph")
+def getGraph():
+    return str(pServer)
+
 @app.route("/nodeStates")
 def getActiveNodes():
-    inactive_node_names = [x[:1] for x in pServer.getNodesByStatus(INACTIVE)]
-    active_node_names = [x[:1] for x in pServer.getNodesByStatus(ACTIVE)]
-    finished_node_names = [x[:1] for x in pServer.getNodesByStatus(FINISHED)]
+    print(pServer.getNodesByStatus(INACTIVE))
+    inactive_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(INACTIVE)]
+    active_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(ACTIVE)]
+    finished_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(FINISHED)]
     return jsonify({'inactive': inactive_node_names,
                     'active': active_node_names,
                     'finished': finished_node_names})
