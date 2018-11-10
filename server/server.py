@@ -110,6 +110,12 @@ class PuzzleServer:
                 if(func(args)):
                     self._updateState(nextState, ACTIVE)
 
+    def getNodesByStatus(self, status):
+        conn = self.engine.connect()
+        selStmt = select([game_state_table]).where(game_state_table.c.status == status)
+        results = conn.execute(selStmt)
+        return results.fetchall()
+
     def _color(self, status):
         if status == INACTIVE:
             return INACTIVE_COLOR
@@ -284,5 +290,15 @@ def playAudio(nodeName, audioFile):
     play_obj.wait_done()
     return "Audio Completed"
 
+@app.route("/nodeStates")
+def getActiveNodes():
+    inactive_node_names = [x[:1] for x in pServer.getNodesByStatus(INACTIVE)]
+    active_node_names = [x[:1] for x in pServer.getNodesByStatus(ACTIVE)]
+    finished_node_names = [x[:1] for x in pServer.getNodesByStatus(FINISHED)]
+    return jsonify({'inactive': inactive_node_names,
+                    'active': active_node_names,
+                    'finished': finished_node_names})
+
 if __name__ == "__main__":
     app.run(threaded=True)
+
