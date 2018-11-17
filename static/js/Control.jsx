@@ -74,7 +74,6 @@ export default class Control extends Component {
                 console.log(error);
             });
     }
-            
 
     componentDidMount() {
         this.ajaxID = setInterval(
@@ -86,7 +85,6 @@ export default class Control extends Component {
     }
 
   checkServerState(){
-    console.log("getting data");
     axios.get(`http://${BASE_URL}/getdata`)
       .then(res => {
         let data = res["data"];
@@ -181,16 +179,82 @@ class PuzzleList extends Component {
 class PuzzleGraph extends Component {
     constructor(props){
         super(props);
-        this.state = {nodes: [], edges: []};
+        this.state = {nodes: [], edges: [], active: [], solved: []};
         this.network = {};
         this.setNetworkInstance = this.setNetworkInstance.bind(this);
+        this.checkPuzzles = this.checkPuzzles.bind(this);
         this.initializeGraph();
     };
+
+    componentDidMount() {
+        this.ajaxID = setInterval(
+            () => this.checkPuzzles(),
+            TICK_TIME
+        )};
+    componentWillUnmount() {
+        clearInterval(this.ajaxID);
+    };
+
+    checkPuzzles(){
+        axios.get(`http://${BASE_URL}/nodeStates`)
+             .then(res => {
+                 let data = res["data"];
+                 console.log(data["active"])
+                 console.log(data["finished"])
+
+                 // TODO: Make a color nodes function rather than 3 loops
+                 for (var solved_node_info of data["finished"]){
+                     console.log("solved node");
+                     console.log(solved_node_info);
+                     var solvedNode = this.network.body.data.nodes.get(solved_node_info.name);
+                     console.log(solvedNode);
+                     solvedNode.color = {
+                         border: '#000000',
+                         background: '#DC6E56',
+                         highlight: {
+                             border: '#2B7CE9',
+                             background: '#D2E5FF'
+                         }
+                     }
+                     this.network.body.data.nodes.update(solvedNode);
+                 }
+
+                 for (var active_node_info of data["active"]){
+                     console.log(active_node_info);
+                     var activeNode = this.network.body.data.nodes.get(active_node_info.name);
+                     console.log("active node");
+                     console.log(activeNode);
+                     activeNode.color = {
+                         border: '#000000',
+                         background: '#79C13A',
+                         highlight: {
+                             border: '#2B7CE9',
+                             background: '#D2E5FF'
+                         }
+                     }
+                     this.network.body.data.nodes.update(activeNode);
+                 }
+                 for (var inactive_node_info of data["inactive"]){
+                     console.log(inactive_node_info);
+                     var inactiveNode = this.network.body.data.nodes.get(inactive_node_info.name);
+                     console.log("inactive node");
+                     console.log(inactiveNode);
+                     inactiveNode.color = {
+                         border: '#000000',
+                         background: '#660066',
+                         highlight: {
+                             border: '#2B7CE9',
+                             background: '#D2E5FF'
+                         }
+                     }
+                     this.network.body.data.nodes.update(inactiveNode);
+                 }
+             });
+    }
 
     initializeGraph() {
         axios.get(`http://${BASE_URL}/graph`)
              .then(res => {
-                 console.log(res);
                  let parsedData = vis.network.convertDot(res["data"]);
                  this.setState({nodes: parsedData.nodes, edges: parsedData.edges});
              })
@@ -198,8 +262,6 @@ class PuzzleGraph extends Component {
 
     setNetworkInstance(nw) {
         this.network = nw;
-        console.log("got network");
-        console.log(this.network)
     };
 
     completeNode(node) {
@@ -218,11 +280,9 @@ class PuzzleGraph extends Component {
 
         const events = {
             click: function(event) {
-                console.log("completing nodes:");
-                console.log(event.nodes);
+                console.log(event.nodes[0]);
                 var clickedNode = this.network.body.data.nodes.get(event.nodes[0]);
                 this.completeNode(clickedNode);
-                console.log(clickedNode);
                 clickedNode.color = {
                     border: '#000000',
                     background: '#DC6E56',
@@ -232,10 +292,6 @@ class PuzzleGraph extends Component {
                     }
                 };
                 this.network.body.data.nodes.update(clickedNode);
-                for (var nodeID in event.nodes) {
-                    console.log(nodeID)
-                    console.log("test")
-                }
             }.bind(this)
         };
         var graph = {nodes: this.state.nodes, edges: this.state.edges};
