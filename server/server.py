@@ -116,6 +116,12 @@ class PuzzleServer:
         results = conn.execute(selStmt)
         return list(results.fetchall())
 
+    def getHeartbeats(self):
+        conn = self.engine.connect()
+        selStmt = select([nodes_table])
+        results = conn.execute(selStmt)
+        return list(results)
+
     def _color(self, status):
         if status == INACTIVE:
             return INACTIVE_COLOR
@@ -301,13 +307,19 @@ def getGraph():
 
 @app.route("/nodeStates")
 def getActiveNodes():
-    print(pServer.getNodesByStatus(INACTIVE))
     inactive_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(INACTIVE)]
     active_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(ACTIVE)]
     finished_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(FINISHED)]
     return jsonify({'inactive': inactive_node_names,
                     'active': active_node_names,
                     'finished': finished_node_names})
+
+@app.route("/heartbeats")
+def getHeartbeats():
+    results = pServer.getHeartbeats()
+    print(results)
+    return jsonify({row[1]: row[2].timestamp() for row in results})
+
 
 if __name__ == "__main__":
     app.run(threaded=True)
