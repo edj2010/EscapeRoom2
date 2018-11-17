@@ -6,10 +6,11 @@ import gameStateLogic
 from gameStateLogic import INACTIVE, ACTIVE, FINISHED
 from flask import Flask
 from flask import render_template, jsonify
-from models import game_state_table, nodes_table, metadata
+from models import gameroom_table, game_state_table, nodes_table, metadata
 import datetime
 import simpleaudio as sa
 import wave
+import time
 
 app = Flask(__name__, static_folder = "../static/dist", template_folder = "../static")
 
@@ -21,7 +22,7 @@ ERROR_COLOR = "indianred3"
 FUNC_COLOR = "skyblue"
 
 AUDIO_PATH = "../Sound/"
-
+GAME_LEN = 3600
 
 class PuzzleServer:
 
@@ -46,6 +47,22 @@ class PuzzleServer:
         self.dependancies = connections["Dependancies"]
         self.engine = create_engine("sqlite:///server.db", echo=True)
         metadata.bind = self.engine
+
+        # initialize gamestate table
+        if not self.engine.dialect.has_table(self.engine, "gameroom_table"):
+            gameroom_table.create(self.engine)
+            i = gameroom_table.insert()
+            i.execute(
+                {
+                    'gameroom_id': 1,
+                    'hint_text': "",
+                    'hint_exists': False,
+                    'hint_timer': 0,
+                    'start_time': 0,
+                    'paused': True,
+                    'gamestate': "unstarted",
+                }
+            )
 
         # initialize node table
         if not self.engine.dialect.has_table(self.engine, "nodes_table"):
@@ -87,6 +104,34 @@ class PuzzleServer:
         )
         conn.execute(updtStmt)
         conn.close()
+
+    def startGame(self):
+        """
+        Starts the game, initializes the start timer
+        """
+        conn = self.engine.connect()
+        updtStmt = (
+            gameroom_table.update()
+            .where(gameroom_table.c.gameroom_id == 1)
+            .values({'start_time': int(time.time()),
+                     'gamestate': "ongoing",
+                     'paused': False
+                    })
+            )
+        conn.execute(updtStmt)
+        conn.close()
+
+    def getRoomInfo(self):
+        """
+        Gets info relevant to display in game room
+        """
+        conn = self.engine.connect()
+        selStmt = select([gameroom_table]).where(gameroom_table.c.gameroom_id == 1)
+        results = dict(conn.execute(selStmt).fetchone())
+        results["time"] = GAME_LEN - (int(time.time()) - results["start_time"])
+        if results["time"] < 0 and results["gamestate"] == "ongoing":
+            results["gamestate"] = "out_of_time"
+        return results
 
     def getState(self, stateName):
         """
@@ -190,12 +235,17 @@ def getData():
     """
     Get server state
     """
-    return jsonify({'hint_text': "Blank Text",
-                    'hint_exists': True,
-                    'time': 7200,
-                    'paused': True,
-                    'gamestate': "ongoing"})
+    roominfo = pServer.getRoomInfo()
+    del roominfo["start_time"]
+    return jsonify(roominfo)
 
+@app.route("/start")
+def start():
+    """
+    Starts the game
+    """
+    pServer.startGame()
+    return "Game Started"
 
 ## ESP API
 def heartbeatHandler(nodeName):

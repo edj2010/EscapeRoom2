@@ -18,3 +18,15 @@ game_state_table = Table(
     Column("game_state_name", String),
     Column("status", Integer),
 )
+
+gameroom_table = Table(
+    "gameroom_table",
+    metadata,
+    Column("gameroom_id", Integer, primary_key=True),
+    Column("hint_text", String),
+    Column("hint_exists", Boolean),
+    Column("hint_timer", Integer),
+    Column("start_time", Integer),
+    Column("paused", Boolean),
+    Column("gamestate", String),
+)
