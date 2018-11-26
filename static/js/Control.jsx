@@ -92,7 +92,6 @@ export default class Control extends Component {
     axios.get(`http://${BASE_URL}/getdata`)
       .then(res => {
         let data = res["data"];
-        console.log(data);
         this.setState({time: Number(data["time"]), gameState: data["gamestate"]});
       });
     }
@@ -123,7 +122,7 @@ class PuzzleList extends Component {
             solvedPuzzles: []
         };
     this.checkPuzzles = this.checkPuzzles.bind(this);
-    }    
+    }
 
     componentDidMount() {
         this.ajaxID = setInterval(
@@ -135,11 +134,9 @@ class PuzzleList extends Component {
     }
 
     checkPuzzles(){
-        console.log("check available puzzles");
         axios.get(`http://${BASE_URL}/nodeStates`)
             .then(res => {
                 let data = res["data"];
-                console.log(data);
                 this.setState(
                     {availablePuzzles: data["active"],
                     solvedPuzzles: data["finished"]});
@@ -204,11 +201,9 @@ class HeartBeatTable extends Component {
                 let heartbeats = res["data"];
                 let currentTime = Math.round((new Date()).getTime() / 1000);
                 let relativeHeartbeats = heartbeats.map(heartbeat => {
-                    console.log("heartbeat");
-                    console.log(heartbeat);
                     let relativeHeartbeat = {};
                     relativeHeartbeat["name"] = heartbeat.name;
-                    relativeHeartbeat["time"] = currentTime - heartbeat.time;
+                    relativeHeartbeat["time"] = Math.round(currentTime - heartbeat.time);
                     return relativeHeartbeat;
                 });
                 this.setState({"heartbeats": relativeHeartbeats});
@@ -286,10 +281,7 @@ class PuzzleGraph extends Component {
                  }
 
                  for (var active_node_info of data["active"]){
-                     console.log(active_node_info);
                      var activeNode = this.network.body.data.nodes.get(active_node_info.name);
-                     console.log("active node");
-                     console.log(activeNode);
                      activeNode.color = {
                          border: '#000000',
                          background: '#79C13A',
@@ -301,10 +293,7 @@ class PuzzleGraph extends Component {
                      this.network.body.data.nodes.update(activeNode);
                  }
                  for (var inactive_node_info of data["inactive"]){
-                     console.log(inactive_node_info);
                      var inactiveNode = this.network.body.data.nodes.get(inactive_node_info.name);
-                     console.log("inactive node");
-                     console.log(inactiveNode);
                      inactiveNode.color = {
                          border: '#000000',
                          background: '#660066',
@@ -346,7 +335,6 @@ class PuzzleGraph extends Component {
 
         const events = {
             click: function(event) {
-                console.log(event.nodes[0]);
                 var clickedNode = this.network.body.data.nodes.get(event.nodes[0]);
                 this.completeNode(clickedNode);
                 clickedNode.color = {
