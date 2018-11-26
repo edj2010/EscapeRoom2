@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import axios from 'axios';
 import Timer from 'react.timer';
 import Graph from 'react-graph-vis';
+import ReactTable from 'react-table';
 import vis from 'vis';
 
 //let BASE_URL = "ogillespie.pythonanywhere.com";
@@ -25,14 +26,15 @@ export default class Control extends Component {
             return(
                 <div>
                     <button onClick={evt =>this.startGame()}>Start Game</button>
+                    <HeartBeatTable/>
                 </div>
             );
         } else if(this.state.gameState==="ongoing"){
             return(
                 <div>
                     <TimerWrapper time={this.state.time} state={this.props.gameState}/>
-                    <PuzzleList/>
                     <PuzzleGraph/>
+                    <HeartBeatTable/>
                 </div>
             );
         } else if(this.state.gameState==="completed"){
@@ -40,12 +42,14 @@ export default class Control extends Component {
                     <div>
                         <p>Room completed with {Math.floor(this.state.time)} seconds left </p>
                         <button onClick={evt =>this.resetRoom()}>Reset Room</button>
+                        <HeartBeatTable/>
                     </div>);
-        } else if(this.state.gameState==="lost"){
+        } else if(this.state.gameState==="out_of_time"){
             return(
                     <div>
                         <p>Room failed </p>
                         <button onClick={evt =>this.resetRoom()}>Reset Room</button>
+                        <HeartBeatTable/>
                     </div>);
         } else if(this.state.gameState==="unknown"){
             return(<p>Loading control panel...</p>);
@@ -177,6 +181,71 @@ class PuzzleList extends Component {
 
 }
 
+class HeartBeatTable extends Component {
+    constructor(props){
+        super(props);
+        this.state = {heartbeats: []};
+        this.checkHeartbeats = this.checkHeartbeats.bind(this);
+    }
+
+    componentDidMount(){
+        this.ajaxID = setInterval(
+            () => this.checkHeartbeats(),
+            TICK_TIME
+        )
+    };
+    componentWillUnmount(){
+        clearInterval(this.ajaxID);
+    };
+
+    checkHeartbeats(){
+        axios.get(`http://${BASE_URL}/heartbeats`)
+             .then(res => {
+                let heartbeats = res["data"];
+                let currentTime = Math.round((new Date()).getTime() / 1000);
+                let relativeHeartbeats = heartbeats.map(heartbeat => {
+                    console.log("heartbeat");
+                    console.log(heartbeat);
+                    let relativeHeartbeat = {};
+                    relativeHeartbeat["name"] = heartbeat.name;
+                    relativeHeartbeat["time"] = currentTime - heartbeat.time;
+                    return relativeHeartbeat;
+                });
+                this.setState({"heartbeats": relativeHeartbeats});
+             }
+        );
+    }
+
+    render(){
+        return (
+            <div>
+                <ReactTable
+                    data={this.state.heartbeats}
+                    columns = {[
+                        {
+                            Header: 'Name',
+                            accessor: 'name',
+                            width: 200
+                        }, {
+                            Header: 'Seconds since last ping',
+                            accessor: 'time',
+                            width: 200
+                        }
+                    ]}
+                    minRows={0}
+                    showPagination={false}
+                    defaultSorted={[
+                        {
+                            id: "time",
+                            desc: true
+                        }
+                    ]}
+                />
+            </div>
+        );
+    }
+}
+
 class PuzzleGraph extends Component {
     constructor(props){
         super(props);
@@ -191,7 +260,8 @@ class PuzzleGraph extends Component {
         this.ajaxID = setInterval(
             () => this.checkPuzzles(),
             TICK_TIME
-        )};
+        );
+    };
     componentWillUnmount() {
         clearInterval(this.ajaxID);
     };
@@ -200,15 +270,10 @@ class PuzzleGraph extends Component {
         axios.get(`http://${BASE_URL}/nodeStates`)
              .then(res => {
                  let data = res["data"];
-                 console.log(data["active"])
-                 console.log(data["finished"])
 
                  // TODO: Make a color nodes function rather than 3 loops
                  for (var solved_node_info of data["finished"]){
-                     console.log("solved node");
-                     console.log(solved_node_info);
                      var solvedNode = this.network.body.data.nodes.get(solved_node_info.name);
-                     console.log(solvedNode);
                      solvedNode.color = {
                          border: '#000000',
                          background: '#DC6E56',

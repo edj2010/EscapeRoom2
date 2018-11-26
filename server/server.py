@@ -368,7 +368,7 @@ def getActiveNodes():
 def getHeartbeats():
     results = pServer.getHeartbeats()
     print(results)
-    return jsonify({row[1]: row[2].timestamp() for row in results})
+    return jsonify([{"name": row[1], "time": row[2].timestamp()} for row in results])
 
 
 if __name__ == "__main__":
