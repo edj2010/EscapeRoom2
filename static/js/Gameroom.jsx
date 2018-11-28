@@ -16,9 +16,9 @@ export default class Gameroom extends Component {
 
             time: 100,
             paused: false,
-            
             gamestate: "unstarted"
         };
+        this.checkServerState();
     }
 
     render() {

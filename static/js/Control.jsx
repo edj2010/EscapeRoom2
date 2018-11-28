@@ -18,7 +18,8 @@ export default class Control extends Component {
             time: "??:??",
             urlPlaying: "None"
         };
-    this.checkServerState = this.checkServerState.bind(this);
+        this.checkServerState = this.checkServerState.bind(this);
+        this.checkServerState();
     };
 
     render(){
@@ -122,7 +123,8 @@ class PuzzleList extends Component {
             availablePuzzles: [],
             solvedPuzzles: []
         };
-    this.checkPuzzles = this.checkPuzzles.bind(this);
+        this.checkPuzzles = this.checkPuzzles.bind(this);
+        this.checkPuzzles();
     }
 
     componentDidMount() {
@@ -154,7 +156,6 @@ class PuzzleList extends Component {
         });
     };
 
-    // TODO: Do we need to unmount all the axios calls?
 
     render(){
         let listItems = this.state.availablePuzzles.map((puzzleInfo) =>
@@ -184,6 +185,7 @@ class HeartBeatTable extends Component {
         super(props);
         this.state = {heartbeats: []};
         this.checkHeartbeats = this.checkHeartbeats.bind(this);
+        this.checkHeartbeats();
     }
 
     componentDidMount(){
@@ -274,6 +276,7 @@ class PuzzleGraph extends Component {
         this.setNetworkInstance = this.setNetworkInstance.bind(this);
         this.checkPuzzles = this.checkPuzzles.bind(this);
         this.initializeGraph();
+        this.checkPuzzles();
     };
 
     componentDidMount() {
