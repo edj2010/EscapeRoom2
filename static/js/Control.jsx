@@ -34,6 +34,7 @@ export default class Control extends Component {
                 <div>
                     <TimerWrapper time={this.state.time} state={this.props.gameState}/>
                     <PuzzleGraph/>
+                    <HintSender/>
                     <HeartBeatTable/>
                 </div>
             );
@@ -237,6 +238,30 @@ class HeartBeatTable extends Component {
                     ]}
                 />
             </div>
+        );
+    }
+}
+
+class HintSender extends Component {
+    constructor(props){
+        super(props);
+    }
+
+    render(){
+        return (
+            <form action="/setHint" method="post">
+                <div>
+                    <label for="message"> Message </label>
+                    <input type="text" id="message" name="hint_message"/>
+                </div>
+                <div>
+                    <label for="time"> Timer</label>
+                    <input type="number" id="time" name="hint_timer" value="30" min="10"/>
+                </div>
+                <div class="button">
+                    <button type="submit">Send Hint</button>
+                </div>
+            </form>
         );
     }
 }

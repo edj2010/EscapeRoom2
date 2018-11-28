@@ -5,7 +5,7 @@ import serverlogic
 import gameStateLogic
 from gameStateLogic import INACTIVE, ACTIVE, FINISHED
 from flask import Flask
-from flask import render_template, jsonify
+from flask import render_template, jsonify, request
 from models import gameroom_table, game_state_table, nodes_table, metadata
 import datetime
 import simpleaudio as sa
@@ -166,6 +166,21 @@ class PuzzleServer:
         selStmt = select([nodes_table])
         results = conn.execute(selStmt)
         return list(results)
+
+    def setHint(self, new_hint_text,  new_hint_timer, new_hint_exists):
+        conn = self.engine.connect()
+        updtStmt = (
+            gameroom_table.update()
+            .where(gameroom_table.c.gameroom_id == 1)
+            .values({
+                "hint_text": new_hint_text,
+                "hint_exists": new_hint_exists,
+                "hint_timer": new_hint_timer
+            })
+        )
+        conn.execute(updtStmt)
+        conn.close()
+
 
     def _color(self, status):
         if status == INACTIVE:
@@ -369,6 +384,11 @@ def getHeartbeats():
     results = pServer.getHeartbeats()
     print(results)
     return jsonify([{"name": row[1], "time": row[2].timestamp()} for row in results])
+
+@app.route("/setHint", methods=['POST'])
+def setHint():
+    pServer.setHint(request.form["hint_message"], request.form["hint_timer"], True)
+    return "Hint Recieved"
 
 
 if __name__ == "__main__":
