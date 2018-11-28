@@ -1,1 +1,4 @@
 server.db
+/connections.json
+/static/js/App.jsx
+/npm-debug.log
