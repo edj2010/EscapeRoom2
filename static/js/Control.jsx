@@ -363,17 +363,20 @@ class PuzzleGraph extends Component {
 
         const events = {
             click: function(event) {
-                var clickedNode = this.network.body.data.nodes.get(event.nodes[0]);
-                this.completeNode(clickedNode);
-                clickedNode.color = {
-                    border: '#000000',
-                    background: '#DC6E56',
-                    highlight: {
-                        border: '#2B7CE9',
-                        background: '#D2E5FF'
-                    }
-                };
-                this.network.body.data.nodes.update(clickedNode);
+                console.log(event);
+                if (event.nodes.length != 0){
+                    var clickedNode = this.network.body.data.nodes.get(event.nodes[0]);
+                    this.completeNode(clickedNode);
+                    clickedNode.color = {
+                        border: '#000000',
+                        background: '#DC6E56',
+                        highlight: {
+                            border: '#2B7CE9',
+                            background: '#D2E5FF'
+                        }
+                    };
+                    this.network.body.data.nodes.update(clickedNode);
+                }
             }.bind(this)
         };
         var graph = {nodes: this.state.nodes, edges: this.state.edges};
