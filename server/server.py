@@ -155,6 +155,13 @@ class PuzzleServer:
                     func = getattr(gameStateLogic, self.dependancies[nextState][0])
                     if(func(args)):
                         self._updateState(nextState, ACTIVE)
+        elif newStatus == INACTIVE:
+            for nextState in self.dependants[stateName]:
+                if self.getState(nextState) == ACTIVE:
+                    args = [self.getState(state) for state in self.dependancies[nextState][1:]]
+                    func = getattr(gameStateLogic, self.dependancies[nextState][0])
+                    if(not func(args)):
+                        self.setState(nextState, INACTIVE)
 
     def getNodesByStatus(self, status):
         conn = self.engine.connect()
@@ -353,6 +360,25 @@ def updateGameState(gameState, status):
         raise KeyError("{0} is not a game state".format(gameState))
         # TODO: Change this to a http error code
     return "game state set"
+
+@app.route("/gameState/<gameState>/toggle")
+def toggleGameState(gameState):
+    """
+    Sets state to completed if the state was INACTIVE or ACTIVE
+    Sets state to INACTIVE if the state was FINISHED and then
+    checks if it should be updated
+    """
+    if gameState in pServer.states:
+        if pServer.getState(gameState) != FINISHED:
+            pServer.setState(gameState, FINISHED)
+        else:
+            pServer.setState(gameState, INACTIVE)
+            args = [pServer.getState(state) for state in pServer.dependancies[gameState][1:]]
+            func = getattr(gameStateLogic, pServer.dependancies[gameState][0])
+            if func(args):
+                pServer.setState(gameState, ACTIVE)
+    return "game state toggled"
+
 
 @app.route("/playAudio/<nodeName>/<audioFile>")
 def playAudioESP(nodeName, audioFile):

@@ -347,8 +347,8 @@ class PuzzleGraph extends Component {
         this.network = nw;
     };
 
-    completeNode(node) {
-        axios.get(`http://${BASE_URL}/gameState/${node.label}/1`);
+    toggleNode(node) {
+        axios.get(`http://${BASE_URL}/gameState/${node.label}/toggle`);
     }
 
     render(){
@@ -363,10 +363,9 @@ class PuzzleGraph extends Component {
 
         const events = {
             click: function(event) {
-                console.log(event);
                 if (event.nodes.length != 0){
                     var clickedNode = this.network.body.data.nodes.get(event.nodes[0]);
-                    this.completeNode(clickedNode);
+                    this.toggleNode(clickedNode);
                     clickedNode.color = {
                         border: '#000000',
                         background: '#DC6E56',
