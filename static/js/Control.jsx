@@ -253,14 +253,14 @@ class HintSender extends Component {
         return (
             <form action="/setHint" method="post">
                 <div>
-                    <label for="message"> Message </label>
+                    Message:
                     <input type="text" id="message" name="hint_message"/>
                 </div>
                 <div>
-                    <label for="time"> Timer</label>
-                    <input type="number" id="time" name="hint_timer" value="30" min="10"/>
+                    Seconds Displayed:
+                    <input type="number" id="time" name="hint_timer" defaultValue="30" min="10"/>
                 </div>
-                <div class="button">
+                <div className="button">
                     <button type="submit">Send Hint</button>
                 </div>
             </form>
