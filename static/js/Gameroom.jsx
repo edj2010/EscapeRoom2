@@ -5,6 +5,7 @@ import ReactCountdownClock from 'react-countdown-clock';
 
 let BASE_URL = "localhost:5000";
 let TICK_TIME = 5000;
+let HINT_AUDIO_FILE = "Crash-Cymbal-1.wav";
 
 export default class Gameroom extends Component {
     constructor(props){
@@ -91,6 +92,7 @@ export default class Gameroom extends Component {
                         () => this.removeHint(),
                         data["hint_timer"]*1000
                     );
+                    this.playHintAudio();
                 }
                 else
                 {
@@ -109,6 +111,18 @@ export default class Gameroom extends Component {
     {
         console.log("remove hint");
         this.state.hint_exists = false;
+    }
+
+    playHintAudio()
+    {
+        console.log(`http://${BASE_URL}/playAudio/${HINT_AUDIO_FILE}`)
+        axios.get(`http://${BASE_URL}/playAudio/${HINT_AUDIO_FILE}`)
+             .then(function (response) {
+                 console.log(response);
+             })
+             .catch(function (error) {
+                 console.log(error);
+             });
     }
 
     componentDidMount()

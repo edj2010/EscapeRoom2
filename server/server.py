@@ -354,12 +354,16 @@ def updateGameState(gameState, status):
     return "game state set"
 
 @app.route("/playAudio/<nodeName>/<audioFile>")
-def playAudio(nodeName, audioFile):
+def playAudioESP(nodeName, audioFile):
+    heartbeatHandler(nodeName)
+    return playAudio(audioFile)
+
+@app.route("/playAudio/<audioFile>")
+def playAudio(audioFile):
     """
     Interface used by the nodes to play audio from the server
     Audio selected by file name and stored on the server computer
     """
-    heartbeatHandler(nodeName)
     # TODO: ensure that multiple web workers running will not interfere
     wav_obj = sa.WaveObject.from_wave_file(AUDIO_PATH + audioFile)
     play_obj = wav_obj.play()
@@ -388,7 +392,7 @@ def getHeartbeats():
 @app.route("/setHint", methods=['POST'])
 def setHint():
     pServer.setHint(request.form["hint_message"], request.form["hint_timer"], True)
-    return "Hint Recieved"
+    return "Hint Recieved", 204
 
 
 if __name__ == "__main__":
