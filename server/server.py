@@ -150,10 +150,11 @@ class PuzzleServer:
         self._updateState(stateName, newStatus)
         if newStatus == FINISHED:
             for nextState in self.dependants[stateName]:
-                args = [self.getState(state) for state in self.dependancies[nextState][1:]]
-                func = getattr(gameStateLogic, self.dependancies[nextState][0])
-                if(func(args)):
-                    self._updateState(nextState, ACTIVE)
+                if self.getState(nextState) == INACTIVE:
+                    args = [self.getState(state) for state in self.dependancies[nextState][1:]]
+                    func = getattr(gameStateLogic, self.dependancies[nextState][0])
+                    if(func(args)):
+                        self._updateState(nextState, ACTIVE)
 
     def getNodesByStatus(self, status):
         conn = self.engine.connect()
