@@ -15,6 +15,9 @@ import time
 app = Flask(__name__, static_folder = "../static/dist", template_folder = "../static")
 
 # Game State constants
+BEGIN_STATE = 'Begin'
+END_STATE = 'End'
+
 INACTIVE_COLOR = "grey73"
 ACTIVE_COLOR = "gold1"
 FINISHED_COLOR = "darkolivegreen3"
@@ -48,7 +51,7 @@ class PuzzleServer:
         self.engine = create_engine("sqlite:///server.db", echo=True)
         metadata.bind = self.engine
 
-        # initialize gamestate table
+        # initialize gameroom table
         if not self.engine.dialect.has_table(self.engine, "gameroom_table"):
             gameroom_table.create(self.engine)
             i = gameroom_table.insert()
@@ -59,6 +62,7 @@ class PuzzleServer:
                     'hint_exists': False,
                     'hint_timer': 0,
                     'start_time': 0,
+                    'end_time': 0,
                     'paused': True,
                     'gamestate': "unstarted",
                 }
@@ -105,6 +109,9 @@ class PuzzleServer:
         conn.execute(updtStmt)
         conn.close()
 
+        if stateName == END_STATE and (newStatus == ACTIVE or newStatus == FINISHED):
+            self.wonGame()
+
     def startGame(self):
         """
         Starts the game, initializes the start timer
@@ -119,6 +126,54 @@ class PuzzleServer:
                     })
             )
         conn.execute(updtStmt)
+        conn.close()        
+        self._updateState(BEGIN_STATE, ACTIVE)
+
+    def resetGame(self):
+        """
+        Resets the game, clears start timer
+        """
+        conn = self.engine.connect()
+        updtStmt = (
+            gameroom_table.update()
+            .where(gameroom_table.c.gameroom_id == 1)
+            .values({'start_time': 0,
+                     'end_time': 0,
+                     'gamestate': "unstarted",
+                     'paused': True
+                    })
+            )
+        conn.execute(updtStmt)
+        conn.close()
+        for state in self.states:
+            self._updateState(state, INACTIVE)
+
+    def wonGame(self):
+        """
+        Ends the game, bringing the user to the winning end screen
+        """
+        conn = self.engine.connect()
+        updtStmt = (
+            gameroom_table.update()
+            .where(gameroom_table.c.gameroom_id == 1)
+            .values({'end_time': int(time.time()),
+                     'gamestate': "completed",
+                    }) 
+            )
+        conn.execute(updtStmt)
+        conn.close()
+
+    def lostGame(self):
+        """
+        Ends the game, bringing the user to the losing end screen
+        """
+        conn = self.engine.connect()
+        updtStmt = (
+            gameroom_table.update()
+            .where(gameroom_table.c.gameroom_id == 1)
+            .values({'gamestate': "out_of_time"})
+                )
+        conn.execute(updtStmt)
         conn.close()
 
     def getRoomInfo(self):
@@ -129,8 +184,10 @@ class PuzzleServer:
         selStmt = select([gameroom_table]).where(gameroom_table.c.gameroom_id == 1)
         results = dict(conn.execute(selStmt).fetchone())
         results["time"] = GAME_LEN - (int(time.time()) - results["start_time"])
+        print(results)
         if results["time"] < 0 and results["gamestate"] == "ongoing":
             results["gamestate"] = "out_of_time"
+            self.lostGame()
         return results
 
     def getState(self, stateName):
@@ -217,7 +274,7 @@ pServer = PuzzleServer("connections.json")
 @app.route("/")
 def gameroom():
     """
-    Generic landing screen
+    Game Room landing screen
     """
     return render_template("index.html")
 
@@ -239,6 +296,25 @@ def getData():
     del roominfo["start_time"]
     return jsonify(roominfo)
 
+@app.route("/graph")
+def getGraph():
+    return str(pServer)
+
+@app.route("/nodeStates")
+def getActiveNodes():
+    inactive_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(INACTIVE)]
+    active_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(ACTIVE)]
+    finished_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(FINISHED)]
+    return jsonify({'inactive': inactive_node_names,
+                    'active': active_node_names,
+                    'finished': finished_node_names})
+
+@app.route("/heartbeats")
+def getHeartbeats():
+    results = pServer.getHeartbeats()
+    print(results)
+    return jsonify([{"name": row[1], "time": row[2].timestamp()} for row in results])
+
 @app.route("/start")
 def start():
     """
@@ -246,6 +322,14 @@ def start():
     """
     pServer.startGame()
     return "Game Started"
+
+@app.route("/reset")
+def reset():
+    """
+    Resets the game
+    """
+    pServer.resetGame()
+    return "Game Reset"
 
 ## ESP API
 def heartbeatHandler(nodeName):
@@ -351,24 +435,6 @@ def playAudio(nodeName, audioFile):
     play_obj.wait_done()
     return "Audio Completed"
 
-@app.route("/graph")
-def getGraph():
-    return str(pServer)
-
-@app.route("/nodeStates")
-def getActiveNodes():
-    inactive_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(INACTIVE)]
-    active_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(ACTIVE)]
-    finished_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(FINISHED)]
-    return jsonify({'inactive': inactive_node_names,
-                    'active': active_node_names,
-                    'finished': finished_node_names})
-
-@app.route("/heartbeats")
-def getHeartbeats():
-    results = pServer.getHeartbeats()
-    print(results)
-    return jsonify([{"name": row[1], "time": row[2].timestamp()} for row in results])
 
 
 if __name__ == "__main__":

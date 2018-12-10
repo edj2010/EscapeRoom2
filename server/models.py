@@ -27,6 +27,7 @@ gameroom_table = Table(
     Column("hint_exists", Boolean),
     Column("hint_timer", Integer),
     Column("start_time", Integer),
+    Column("end_time", Integer),
     Column("paused", Boolean),
     Column("gamestate", String),
 )

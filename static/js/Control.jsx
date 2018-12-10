@@ -70,7 +70,7 @@ export default class Control extends Component {
     }
 
     resetRoom() {
-        axios.get(`http://${BASE_URL}/controls/restart`)
+        axios.get(`http://${BASE_URL}/reset`)
             .then(function (response) {
                 console.log(response);
             })
