@@ -5,7 +5,7 @@ import serverlogic
 import gameStateLogic
 from gameStateLogic import INACTIVE, ACTIVE, FINISHED
 from flask import Flask
-from flask import render_template, jsonify
+from flask import render_template, jsonify, request
 from models import gameroom_table, game_state_table, nodes_table, metadata
 import datetime
 import simpleaudio as sa
@@ -207,10 +207,18 @@ class PuzzleServer:
         self._updateState(stateName, newStatus)
         if newStatus == FINISHED:
             for nextState in self.dependants[stateName]:
-                args = [self.getState(state) for state in self.dependancies[nextState][1:]]
-                func = getattr(gameStateLogic, self.dependancies[nextState][0])
-                if(func(args)):
-                    self._updateState(nextState, ACTIVE)
+                if self.getState(nextState) == INACTIVE:
+                    args = [self.getState(state) for state in self.dependancies[nextState][1:]]
+                    func = getattr(gameStateLogic, self.dependancies[nextState][0])
+                    if(func(args)):
+                        self._updateState(nextState, ACTIVE)
+        elif newStatus == INACTIVE:
+            for nextState in self.dependants[stateName]:
+                if self.getState(nextState) == ACTIVE:
+                    args = [self.getState(state) for state in self.dependancies[nextState][1:]]
+                    func = getattr(gameStateLogic, self.dependancies[nextState][0])
+                    if(not func(args)):
+                        self.setState(nextState, INACTIVE)
 
     def getNodesByStatus(self, status):
         conn = self.engine.connect()
@@ -223,6 +231,21 @@ class PuzzleServer:
         selStmt = select([nodes_table])
         results = conn.execute(selStmt)
         return list(results)
+
+    def setHint(self, new_hint_text,  new_hint_timer, new_hint_exists):
+        conn = self.engine.connect()
+        updtStmt = (
+            gameroom_table.update()
+            .where(gameroom_table.c.gameroom_id == 1)
+            .values({
+                "hint_text": new_hint_text,
+                "hint_exists": new_hint_exists,
+                "hint_timer": new_hint_timer
+            })
+        )
+        conn.execute(updtStmt)
+        conn.close()
+
 
     def _color(self, status):
         if status == INACTIVE:
@@ -422,19 +445,47 @@ def updateGameState(gameState, status):
         # TODO: Change this to a http error code
     return "game state set"
 
+@app.route("/gameState/<gameState>/toggle")
+def toggleGameState(gameState):
+    """
+    Sets state to completed if the state was INACTIVE or ACTIVE
+    Sets state to INACTIVE if the state was FINISHED and then
+    checks if it should be updated
+    """
+    if gameState in pServer.states:
+        if pServer.getState(gameState) != FINISHED:
+            pServer.setState(gameState, FINISHED)
+        else:
+            pServer.setState(gameState, INACTIVE)
+            args = [pServer.getState(state) for state in pServer.dependancies[gameState][1:]]
+            func = getattr(gameStateLogic, pServer.dependancies[gameState][0])
+            if func(args):
+                pServer.setState(gameState, ACTIVE)
+    return "game state toggled"
+
+
 @app.route("/playAudio/<nodeName>/<audioFile>")
-def playAudio(nodeName, audioFile):
+def playAudioESP(nodeName, audioFile):
+    heartbeatHandler(nodeName)
+    return playAudio(audioFile)
+
+@app.route("/playAudio/<audioFile>")
+def playAudio(audioFile):
     """
     Interface used by the nodes to play audio from the server
     Audio selected by file name and stored on the server computer
     """
-    heartbeatHandler(nodeName)
     # TODO: ensure that multiple web workers running will not interfere
     wav_obj = sa.WaveObject.from_wave_file(AUDIO_PATH + audioFile)
     play_obj = wav_obj.play()
     play_obj.wait_done()
     return "Audio Completed"
 
+
+@app.route("/setHint", methods=['POST'])
+def setHint():
+    pServer.setHint(request.form["hint_message"], request.form["hint_timer"], True)
+    return "Hint Recieved", 204
 
 
 if __name__ == "__main__":

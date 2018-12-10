@@ -18,7 +18,8 @@ export default class Control extends Component {
             time: "??:??",
             urlPlaying: "None"
         };
-    this.checkServerState = this.checkServerState.bind(this);
+        this.checkServerState = this.checkServerState.bind(this);
+        this.checkServerState();
     };
 
     render(){
@@ -34,6 +35,7 @@ export default class Control extends Component {
                 <div>
                     <TimerWrapper time={this.state.time} state={this.props.gameState}/>
                     <PuzzleGraph/>
+                    <HintSender/>
                     <HeartBeatTable/>
                 </div>
             );
@@ -121,7 +123,8 @@ class PuzzleList extends Component {
             availablePuzzles: [],
             solvedPuzzles: []
         };
-    this.checkPuzzles = this.checkPuzzles.bind(this);
+        this.checkPuzzles = this.checkPuzzles.bind(this);
+        this.checkPuzzles();
     }
 
     componentDidMount() {
@@ -153,7 +156,6 @@ class PuzzleList extends Component {
         });
     };
 
-    // TODO: Do we need to unmount all the axios calls?
 
     render(){
         let listItems = this.state.availablePuzzles.map((puzzleInfo) =>
@@ -183,6 +185,7 @@ class HeartBeatTable extends Component {
         super(props);
         this.state = {heartbeats: []};
         this.checkHeartbeats = this.checkHeartbeats.bind(this);
+        this.checkHeartbeats();
     }
 
     componentDidMount(){
@@ -241,6 +244,30 @@ class HeartBeatTable extends Component {
     }
 }
 
+class HintSender extends Component {
+    constructor(props){
+        super(props);
+    }
+
+    render(){
+        return (
+            <form action="/setHint" method="post">
+                <div>
+                    Message:
+                    <input type="text" id="message" name="hint_message"/>
+                </div>
+                <div>
+                    Seconds Displayed:
+                    <input type="number" id="time" name="hint_timer" defaultValue="30" min="10"/>
+                </div>
+                <div className="button">
+                    <button type="submit">Send Hint</button>
+                </div>
+            </form>
+        );
+    }
+}
+
 class PuzzleGraph extends Component {
     constructor(props){
         super(props);
@@ -249,6 +276,7 @@ class PuzzleGraph extends Component {
         this.setNetworkInstance = this.setNetworkInstance.bind(this);
         this.checkPuzzles = this.checkPuzzles.bind(this);
         this.initializeGraph();
+        this.checkPuzzles();
     };
 
     componentDidMount() {
@@ -319,8 +347,8 @@ class PuzzleGraph extends Component {
         this.network = nw;
     };
 
-    completeNode(node) {
-        axios.get(`http://${BASE_URL}/gameState/${node.label}/1`);
+    toggleNode(node) {
+        axios.get(`http://${BASE_URL}/gameState/${node.label}/toggle`);
     }
 
     render(){
@@ -335,17 +363,19 @@ class PuzzleGraph extends Component {
 
         const events = {
             click: function(event) {
-                var clickedNode = this.network.body.data.nodes.get(event.nodes[0]);
-                this.completeNode(clickedNode);
-                clickedNode.color = {
-                    border: '#000000',
-                    background: '#DC6E56',
-                    highlight: {
-                        border: '#2B7CE9',
-                        background: '#D2E5FF'
-                    }
-                };
-                this.network.body.data.nodes.update(clickedNode);
+                if (event.nodes.length != 0){
+                    var clickedNode = this.network.body.data.nodes.get(event.nodes[0]);
+                    this.toggleNode(clickedNode);
+                    clickedNode.color = {
+                        border: '#000000',
+                        background: '#DC6E56',
+                        highlight: {
+                            border: '#2B7CE9',
+                            background: '#D2E5FF'
+                        }
+                    };
+                    this.network.body.data.nodes.update(clickedNode);
+                }
             }.bind(this)
         };
         var graph = {nodes: this.state.nodes, edges: this.state.edges};
