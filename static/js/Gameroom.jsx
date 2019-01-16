@@ -31,7 +31,7 @@ export default class Gameroom extends Component {
             </div>
             );
         }
-        else if (this.state.gamestate === "finished")
+        else if (this.state.gamestate === "completed")
         {
             return(
             <div className="Gameroom">
@@ -71,12 +71,15 @@ export default class Gameroom extends Component {
         axios.get(`http://${BASE_URL}/getdata`)
             .then(res => {
                 let data = res["data"];
+                let state = data["gamestate"];
                 let hint_text = data["hint_text"];
                 let hint_exists = data["hint_exists"];
                 let time = data["time"];
+                if (state == "completed"){ // Slightly hacky way to stop time from updating on the win screen
+                    time = this.state.time
+                }
                 let hint_timer = data["hint_timer"];
                 let paused = data["paused"];
-                let state = data["gamestate"];
 
                 if (hint_exists && (hint_text !== this.state.hint_text))
                 {
