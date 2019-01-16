@@ -273,12 +273,21 @@ class PuzzleServer:
         g = "digraph gameStates {"
         g += "".join([state + " [style=filled, fillcolor=" + self._color(gameStates[state]) + "];"
                                                         for state in gameStates])
-        g += "".join([func + " [style=filled, fillcolor=" + FUNC_COLOR + "];" for func in uniqueFuncNames.values()])
+        
+        g += "".join([func + " [style=filled, fillcolor=" + FUNC_COLOR + "];"
+                                                        for func in uniqueFuncNames.values()
+                                                        if 'and' not in func.lower()])
+        
         g += "".join([uniqueFuncNames[state] + " -> " + state + ";"
-                                                        for state in self.dependancies])
-        g += "".join([state + " -> " + uniqueFuncNames[dState] + ";"
+                                                        for state in self.dependancies
+                                                        if 'and' not in uniqueFuncNames[state].lower()])
+        
+        g += "".join([state + " -> " + (uniqueFuncNames[dState]
+                                            if 'and' not in uniqueFuncNames[dState].lower()
+                                            else dState) + ";"
                                                         for state in self.dependants
                                                         for dState in dependants[state]])
+
         return g + "}"
 
     def __str__(self):
