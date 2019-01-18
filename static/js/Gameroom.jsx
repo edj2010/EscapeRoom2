@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
 import ReactCountdownClock from 'react-countdown-clock';
+import {Display, Digit, Colon} from "@tdukart/seven-segment-display";
 
 let BASE_URL = "localhost:5000";
 let TICK_TIME = 5000;
@@ -50,8 +51,11 @@ export default class Gameroom extends Component {
         else if (this.state.hint_exists)
         {
             return (
-            <div className="Gameroom">
-                <ReactCountdownClock paused={this.state.paused} seconds={this.state.time} timeformat={"hms"}/>
+            <div className="Gameroom" style={{ width: "200px" }}>
+                <Display value={this.state.time / 60} color="red" strokeColor="black" digitCount={2} />
+                <Colon color="red"/>
+                <Display value={this.state.time % 60} color="red" strokeColor="black" digitCount={2} />
+
                 <p> Hint: {this.state.hint_text} </p>
             </div>
             );
@@ -59,8 +63,10 @@ export default class Gameroom extends Component {
         else
         {
             return (
-            <div className="Gameroom">
-                <ReactCountdownClock paused={this.state.paused} seconds={this.state.time} timeformat={"hms"}/>
+            <div className="Gameroom" style={{ width: "200px" }}>
+                <Display value={Math.floor(this.state.time / 60)} color="blue" strokeColor="white" digitCount={2} />
+                <Colon color="blue" strokeColor="white"/>
+                <Display value={this.state.time % 60} color="blue" strokeColor="white" digitCount={2} />
             </div>
             );
         }
@@ -128,16 +134,28 @@ export default class Gameroom extends Component {
              });
     }
 
+    lowerTime()
+    {
+        if (!this.state.paused){
+            this.setState({"time": this.state.time - 1})
+        }
+    }
+
     componentDidMount()
     {
         this.ajaxID = setInterval(
             () => this.checkServerState(),
             TICK_TIME
         );
+        this.timer = setInterval(
+            () => this.lowerTime(),
+            1000
+        );
     }
 
     componentWillUnmount()
     {
         clearInterval(this.ajaxID);
+        clearInterval(this.timer)
     }
 }
