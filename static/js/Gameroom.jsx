@@ -50,23 +50,30 @@ export default class Gameroom extends Component {
         }
         else if (this.state.hint_exists)
         {
+            let minutes = Math.floor(this.state.time / 60);
+            let seconds = this.state.time % 60;
+            let paddedMinutes = minutes.toString(10).padStart(4, "0");
+            let paddedSeconds = seconds.toString(10).padStart(4, "0");
             return (
-            <div className="Gameroom" style={{ width: "200px" }}>
-                <Display value={this.state.time / 60} color="red" strokeColor="black" digitCount={2} />
-                <Colon color="red"/>
-                <Display value={this.state.time % 60} color="red" strokeColor="black" digitCount={2} />
-
+            <div className="Gameroom" style={{whiteSpace: "nowrap", width: "500" }}>
+                <Display value={paddedMinutes} color="blue" strokeColor="white" digitCount={2} />
+                <Colon color="blue" strokeColor="white" y={4} x={-1} />
+                <Display value={paddedSeconds} color="blue" strokeColor="white" digitCount={2} />
                 <p> Hint: {this.state.hint_text} </p>
             </div>
             );
         }
         else
         {
+            let minutes = Math.floor(this.state.time / 60);
+            let seconds = this.state.time % 60;
+            let paddedMinutes = minutes.toString(10).padStart(4, "0");
+            let paddedSeconds = seconds.toString(10).padStart(4, "0");
             return (
-            <div className="Gameroom" style={{ width: "200px" }}>
-                <Display value={Math.floor(this.state.time / 60)} color="blue" strokeColor="white" digitCount={2} />
-                <Colon color="blue" strokeColor="white"/>
-                <Display value={this.state.time % 60} color="blue" strokeColor="white" digitCount={2} />
+            <div className="Gameroom" style={{whiteSpace: "nowrap", width: "500" }}>
+                <Display value={paddedMinutes} color="blue" strokeColor="white" digitCount={2} />
+                <Colon color="blue" strokeColor="white" y={4} x={-1} />
+                <Display value={paddedSeconds} color="blue" strokeColor="white" digitCount={2} />
             </div>
             );
         }
