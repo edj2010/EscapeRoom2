@@ -125,7 +125,7 @@ export default class Gameroom extends Component {
     playHintAudio()
     {
         console.log(`http://${BASE_URL}/playAudio/${HINT_AUDIO_FILE}`)
-        axios.get(`http://${BASE_URL}/playAudio/${HINT_AUDIO_FILE}`)
+        axios.post(`http://${BASE_URL}/playAudio/${HINT_AUDIO_FILE}`)
              .then(function (response) {
                  console.log(response);
              })

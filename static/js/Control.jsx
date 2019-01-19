@@ -62,7 +62,7 @@ export default class Control extends Component {
     }
 
     startGame() {
-        axios.get(`http://${BASE_URL}/start`)
+        axios.post(`http://${BASE_URL}/start`)
             .then(function (response) {
                 console.log(response);
             })
@@ -72,7 +72,7 @@ export default class Control extends Component {
     }
 
     resetRoom() {
-        axios.get(`http://${BASE_URL}/reset`)
+        axios.post(`http://${BASE_URL}/reset`)
             .then(function (response) {
                 console.log(response);
             })
@@ -147,7 +147,7 @@ class PuzzleList extends Component {
     }
 
     completePuzzle(puzzleName){
-        axios.get(`http://${BASE_URL}/gameState/${puzzleName}/1`)
+        axios.post(`http://${BASE_URL}/gameState/${puzzleName}/1`)
         .then(function (response) {
             console.log(response);
         })
@@ -348,7 +348,7 @@ class PuzzleGraph extends Component {
     };
 
     toggleNode(node) {
-        axios.get(`http://${BASE_URL}/gameState/${node.label}/toggle`);
+        axios.post(`http://${BASE_URL}/gameState/${node.label}/toggle`);
     }
 
     render(){

@@ -48,7 +48,7 @@ class PuzzleServer:
         self.states = {name: ID for ID, name in enumerate(connections["States"])}
         self.dependants = connections["Dependants"]
         self.dependancies = connections["Dependancies"]
-        self.engine = create_engine("sqlite:///server.db", echo=True)
+        self.engine = create_engine("sqlite:///server.db", echo=False)
         metadata.bind = self.engine
 
         # initialize gameroom table
@@ -347,7 +347,7 @@ def getHeartbeats():
     print(results)
     return jsonify([{"name": row[1], "time": row[2].timestamp()} for row in results])
 
-@app.route("/start")
+@app.route("/start", methods=['POST'])
 def start():
     """
     Starts the game
@@ -355,7 +355,7 @@ def start():
     pServer.startGame()
     return "Game Started"
 
-@app.route("/reset")
+@app.route("/reset", methods=['POST'])
 def reset():
     """
     Resets the game
@@ -432,7 +432,7 @@ def streamStatus(nodeName, streamController):
         raise KeyError("{0} is not a stream controller".format(streamController))
         # TODO: Change this to a http error code
 
-@app.route("/gameStateESP/<nodeName>/<gameState>/<status>")
+@app.route("/gameStateESP/<nodeName>/<gameState>/<status>", methods=['POST'])
 def updateGameStateESP(nodeName, gameState, status):
     """
     API for ESP updating gamestate
@@ -441,7 +441,7 @@ def updateGameStateESP(nodeName, gameState, status):
     heartbeatHandler(nodeName)
     return updateGameState(gameState, status)
 
-@app.route("/gameState/<gameState>/<status>")
+@app.route("/gameState/<gameState>/<status>", methods=['POST'])
 def updateGameState(gameState, status):
     """
     API for updating gamestate from web
@@ -454,7 +454,7 @@ def updateGameState(gameState, status):
         # TODO: Change this to a http error code
     return "game state set"
 
-@app.route("/gameState/<gameState>/toggle")
+@app.route("/gameState/<gameState>/toggle", methods=['POST'])
 def toggleGameState(gameState):
     """
     Sets state to completed if the state was INACTIVE or ACTIVE
@@ -473,12 +473,12 @@ def toggleGameState(gameState):
     return "game state toggled"
 
 
-@app.route("/playAudio/<nodeName>/<audioFile>")
+@app.route("/playAudio/<nodeName>/<audioFile>", methods=['POST'])
 def playAudioESP(nodeName, audioFile):
     heartbeatHandler(nodeName)
     return playAudio(audioFile)
 
-@app.route("/playAudio/<audioFile>")
+@app.route("/playAudio/<audioFile>", methods=['POST'])
 def playAudio(audioFile):
     """
     Interface used by the nodes to play audio from the server
