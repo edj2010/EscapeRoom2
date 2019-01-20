@@ -38,6 +38,8 @@ class PuzzleServer:
         with open(filename, "r") as infile:
             connections = json.load(infile)
 
+        print(connections)
+
         # node information
         self.nodes = {name: ID for ID, name in enumerate(connections["Nodes"])}
         print(self.nodes)
@@ -127,8 +129,8 @@ class PuzzleServer:
             )
         conn.execute(updtStmt)
         conn.close()        
-        self._updateState(BEGIN_STATE, ACTIVE)
-
+        self.setState(BEGIN_STATE, FINISHED)
+                
     def resetGame(self):
         """
         Resets the game, clears start timer
@@ -466,10 +468,11 @@ def toggleGameState(gameState):
             pServer.setState(gameState, FINISHED)
         else:
             pServer.setState(gameState, INACTIVE)
-            args = [pServer.getState(state) for state in pServer.dependancies[gameState][1:]]
-            func = getattr(gameStateLogic, pServer.dependancies[gameState][0])
-            if func(args):
-                pServer.setState(gameState, ACTIVE)
+            if gameState in pServer.dependancies:
+                args = [pServer.getState(state) for state in pServer.dependancies[gameState][1:]]
+                func = getattr(gameStateLogic, pServer.dependancies[gameState][0])
+                if func(args):
+                    pServer.setState(gameState, ACTIVE)
     return "game state toggled"
 
 
