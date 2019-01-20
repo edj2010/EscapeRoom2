@@ -366,6 +366,7 @@ def reset():
     return "Game Reset"
 
 ## ESP API
+@app.route("/heartbeat/<nodeName>", methods=["POST"])
 def heartbeatHandler(nodeName):
     """
     sets the last_ping value for a given node to the current time.
@@ -382,6 +383,7 @@ def heartbeatHandler(nodeName):
     else:
         raise KeyError("{0} is not a node".format(nodeName))
         # TODO: Change this to a http error code
+    return "Heartbeat registered"
 
 @app.route("/input/<nodeName>/<value>")
 def input(nodeName, value):
