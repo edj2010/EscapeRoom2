@@ -23,7 +23,7 @@ def main():
     # Get base url for requests
     if len(sys.argv) > 1:
         BASE_URL = sys.argv[1]
-    
+
     # Run loop for reading in instructions
     while True:
         Input = input(">").split()
@@ -36,7 +36,7 @@ def main():
                     "saveNodes <fileName> - saves existing nodes in appropriate format to specified file",
                     "ping <nodeName> - sends heartbeat ping to server to update specified node's status",
                     "setLoop <loopPeriod> - sets loop period in seconds for run ping frequency"]) + "\n")
-        
+
         elif (Input[0] == "addNode"):
             active = False
             if len(Input) >= 3:
@@ -79,7 +79,6 @@ def main():
                 strings = [node + " " + str(NODES[node]) + "\n" for node in NODES]
                 for s in strings:
                     f.write(s)
-        
 
         elif (Input[0] == "ping"):
             sendHeartbeat(Input[1])
