@@ -2,11 +2,12 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
 import ReactCountdownClock from 'react-countdown-clock';
-import {Display, Digit, Colon} from "@tdukart/seven-segment-display";
+import SevenSegClock from "./SevenSegClock.jsx"
 
 let BASE_URL = "localhost:5000";
 let TICK_TIME = 5000;
 let HINT_AUDIO_FILE = "Crash-Cymbal-1.wav";
+
 
 export default class Gameroom extends Component {
     constructor(props){
@@ -24,6 +25,8 @@ export default class Gameroom extends Component {
     }
 
     render() {
+        let minutes = Math.floor(this.state.time / 60);
+        let seconds = this.state.time % 60;
         if (this.state.gamestate === "unstarted")
         {
             return(
@@ -55,25 +58,17 @@ export default class Gameroom extends Component {
             let paddedMinutes = minutes.toString(10).padStart(4, "0");
             let paddedSeconds = seconds.toString(10).padStart(4, "0");
             return (
-            <div className="Gameroom" style={{whiteSpace: "nowrap", width: "500" }}>
-                <Display value={paddedMinutes} color="blue" strokeColor="white" digitCount={2} />
-                <Colon color="blue" strokeColor="white" y={4} x={-1} />
-                <Display value={paddedSeconds} color="blue" strokeColor="white" digitCount={2} />
+            <div className="Gameroom" style={{whiteSpace: "nowrap"}}>
+                <SevenSegClock color="black" minuteCount={2} secondCount={2} minutes={minutes} seconds={seconds}/>
                 <p> Hint: {this.state.hint_text} </p>
             </div>
             );
         }
         else
         {
-            let minutes = Math.floor(this.state.time / 60);
-            let seconds = this.state.time % 60;
-            let paddedMinutes = minutes.toString(10).padStart(4, "0");
-            let paddedSeconds = seconds.toString(10).padStart(4, "0");
             return (
-            <div className="Gameroom" style={{whiteSpace: "nowrap", width: "500" }}>
-                <Display value={paddedMinutes} color="blue" strokeColor="white" digitCount={2} />
-                <Colon color="blue" strokeColor="white" y={4} x={-1} />
-                <Display value={paddedSeconds} color="blue" strokeColor="white" digitCount={2} />
+            <div className="Gameroom" style={{whiteSpace: "nowrap"}}>
+                <SevenSegClock color="black" minuteCount={2} secondCount={2} minutes={minutes} seconds={seconds}/>
             </div>
             );
         }
