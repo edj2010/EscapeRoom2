@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import axios from 'axios';
 import ReactCountdownClock from 'react-countdown-clock';
 import SevenSegClock from "./SevenSegClock.jsx"
+import { Textfit } from 'react-textfit';
 
 let BASE_URL = "localhost:5000";
 let TICK_TIME = 5000;
@@ -59,15 +60,21 @@ export default class Gameroom extends Component {
             let paddedSeconds = seconds.toString(10).padStart(4, "0");
             return (
             <div className="Gameroom" style={{whiteSpace: "nowrap"}}>
-                <SevenSegClock color="black" minuteCount={2} secondCount={2} minutes={minutes} seconds={seconds}/>
-                <p> Hint: {this.state.hint_text} </p>
+                <div style={{width:"100%", height:"40%", paddingLeft: "15px", paddingRight: "15px"}}>
+                    <Textfit mode="single" max={500}>
+                        Hint: {this.state.hint_text} 
+                    </Textfit>
+                </div>
+                <div style={{width:"80%", margin:"auto"}}>
+                    <SevenSegClock color="black" minuteCount={2} secondCount={2} minutes={minutes} seconds={seconds}/>
+                </div>
             </div>
             );
         }
         else
         {
             return (
-            <div className="Gameroom" style={{whiteSpace: "nowrap"}}>
+            <div className="Gameroom" style={{margin:"auto", paddingLeft:"10%", paddingTop:"10%"}}>
                 <SevenSegClock color="black" minuteCount={2} secondCount={2} minutes={minutes} seconds={seconds}/>
             </div>
             );
