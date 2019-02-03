@@ -185,7 +185,10 @@ class PuzzleServer:
         conn = self.engine.connect()
         selStmt = select([gameroom_table]).where(gameroom_table.c.gameroom_id == 1)
         results = dict(conn.execute(selStmt).fetchone())
-        results["time"] = GAME_LEN - (int(time.time()) - results["start_time"])
+        if results["end_time"] > results["start_time"]:
+            results["time"] = GAME_LEN - (results["end_time"] - results["start_time"])
+        else:
+            results["time"] = GAME_LEN - (int(time.time()) - results["start_time"])
         print(results)
         if results["time"] < 0 and results["gamestate"] == "ongoing":
             results["gamestate"] = "out_of_time"
