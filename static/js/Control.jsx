@@ -354,7 +354,10 @@ class PuzzleGraph extends Component {
     render(){
         const options = {
             layout: {
-                hierarchical: true
+                hierarchical: {
+                    enabled: true,
+                    sortMethod: 'directed'
+                }
             },
             edges: {
                 color: "#000000"
