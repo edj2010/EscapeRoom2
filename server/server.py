@@ -128,9 +128,9 @@ class PuzzleServer:
                     })
             )
         conn.execute(updtStmt)
-        conn.close()        
+        conn.close()
         self.setState(BEGIN_STATE, FINISHED)
-                
+
     def resetGame(self):
         """
         Resets the game, clears start timer
