@@ -7,6 +7,7 @@ name = "pypi"
 
 [packages]
 requests = "*"
+flask-cors = "*"
 
 [requires]
 python_version = "3.6"

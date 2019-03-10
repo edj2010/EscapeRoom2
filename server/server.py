@@ -5,7 +5,8 @@ import serverlogic
 import gameStateLogic
 from gameStateLogic import INACTIVE, ACTIVE, FINISHED
 from flask import Flask
-from flask import render_template, jsonify, request
+from flask import render_template, jsonify, request, Response
+from flask_cors import CORS
 from models import gameroom_table, game_state_table, nodes_table, metadata
 import datetime
 import simpleaudio as sa
@@ -13,6 +14,7 @@ import wave
 import time
 
 app = Flask(__name__, static_folder = "../static/dist", template_folder = "../static")
+CORS(app)
 
 # Game State constants
 BEGIN_STATE = 'Begin'
@@ -93,7 +95,7 @@ class PuzzleServer:
                     {
                         "game_state_id": self.states[state],
                         "game_state_name": state,
-                        "status": INACTIVE, 
+                        "status": INACTIVE,
                     }
                 )
 
@@ -160,7 +162,7 @@ class PuzzleServer:
             .where(gameroom_table.c.gameroom_id == 1)
             .values({'end_time': int(time.time()),
                      'gamestate': "completed",
-                    }) 
+                    })
             )
         conn.execute(updtStmt)
         conn.close()
@@ -278,15 +280,15 @@ class PuzzleServer:
         g = "digraph gameStates {"
         g += "".join([state + " [style=filled, fillcolor=" + self._color(gameStates[state]) + "];"
                                                         for state in gameStates])
-        
+
         g += "".join([func + " [style=filled, fillcolor=" + FUNC_COLOR + "];"
                                                         for func in uniqueFuncNames.values()
                                                         if 'and' not in func.lower()])
-        
+
         g += "".join([uniqueFuncNames[state] + " -> " + state + ";"
                                                         for state in self.dependancies
                                                         if 'and' not in uniqueFuncNames[state].lower()])
-        
+
         g += "".join([state + " -> " + (uniqueFuncNames[dState]
                                             if 'and' not in uniqueFuncNames[dState].lower()
                                             else dState) + ";"
@@ -388,7 +390,7 @@ def heartbeatHandler(nodeName):
         # TODO: Change this to a http error code
     return "Heartbeat registered"
 
-@app.route("/input/<nodeName>/<value>")
+@app.route("/input/<nodeName>/<value>", methods = ['GET','POST'])
 def input(nodeName, value):
     """
     Given a node and a value, looks up the trigger that the node inputs to, and sends
@@ -506,5 +508,4 @@ def setHint():
 
 
 if __name__ == "__main__":
-    app.run(threaded=True)
-
+    app.run(threaded=True, host = '0.0.0.0')
