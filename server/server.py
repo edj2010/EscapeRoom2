@@ -13,8 +13,8 @@ import simpleaudio as sa
 import wave
 import time
 
-app = Flask(__name__, static_folder = "../static/dist", template_folder = "../static")
-CORS(app)
+application = Flask(__name__, static_folder = "../static/dist", template_folder = "../static")
+CORS(application)
 
 # Game State constants
 BEGIN_STATE = 'Begin'
@@ -40,11 +40,9 @@ class PuzzleServer:
         with open(filename, "r") as infile:
             connections = json.load(infile)
 
-        print(connections)
 
         # node information
         self.nodes = {name: ID for ID, name in enumerate(connections["Nodes"])}
-        print(self.nodes)
         self.streams = connections["Streams"]
         self.mappings = connections["Mappings"]
 
@@ -191,7 +189,6 @@ class PuzzleServer:
             results["time"] = GAME_LEN - (results["end_time"] - results["start_time"])
         else:
             results["time"] = GAME_LEN - (int(time.time()) - results["start_time"])
-        print(results)
         if results["time"] < 0 and results["gamestate"] == "ongoing":
             results["gamestate"] = "out_of_time"
             self.lostGame()
@@ -310,14 +307,14 @@ pServer = PuzzleServer("connections.json")
 
 
 ## GUI
-@app.route("/")
+@application.route("/")
 def gameroom():
     """
     Game Room landing screen
     """
     return render_template("index.html")
 
-@app.route("/controlroom")
+@application.route("/controlroom")
 def controlRoom():
     """
     Control Room landing screen
@@ -326,7 +323,7 @@ def controlRoom():
 
 
 ## Server API
-@app.route("/getdata")
+@application.route("/getdata")
 def getData():
     """
     Get server state
@@ -335,11 +332,11 @@ def getData():
     del roominfo["start_time"]
     return jsonify(roominfo)
 
-@app.route("/graph")
+@application.route("/graph")
 def getGraph():
     return str(pServer)
 
-@app.route("/nodeStates")
+@application.route("/nodeStates")
 def getActiveNodes():
     inactive_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(INACTIVE)]
     active_node_names = [{"id": x[0], "name": x[1]} for x in pServer.getNodesByStatus(ACTIVE)]
@@ -348,13 +345,12 @@ def getActiveNodes():
                     'active': active_node_names,
                     'finished': finished_node_names})
 
-@app.route("/heartbeats")
+@application.route("/heartbeats")
 def getHeartbeats():
     results = pServer.getHeartbeats()
-    print(results)
     return jsonify([{"name": row[1], "time": row[2].timestamp()} for row in results])
 
-@app.route("/start", methods=['POST'])
+@application.route("/start", methods=['POST'])
 def start():
     """
     Starts the game
@@ -362,7 +358,7 @@ def start():
     pServer.startGame()
     return "Game Started"
 
-@app.route("/reset", methods=['POST'])
+@application.route("/reset", methods=['POST'])
 def reset():
     """
     Resets the game
@@ -371,7 +367,7 @@ def reset():
     return "Game Reset"
 
 ## ESP API
-@app.route("/heartbeat/<nodeName>", methods=["POST"])
+@application.route("/heartbeat/<nodeName>", methods=["POST"])
 def heartbeatHandler(nodeName):
     """
     sets the last_ping value for a given node to the current time.
@@ -390,12 +386,13 @@ def heartbeatHandler(nodeName):
         # TODO: Change this to a http error code
     return "Heartbeat registered"
 
-@app.route("/input/<nodeName>/<value>", methods = ['GET','POST'])
+@application.route("/input/<nodeName>/<value>", methods = ['GET','POST'])
 def input(nodeName, value):
     """
     Given a node and a value, looks up the trigger that the node inputs to, and sends
     the value passed to the out_val for the trigger's output node
     """
+    data = request.data
     heartbeatHandler(nodeName)
     outputNodes = pServer.mappings[nodeName]
     for outputNode in outputNodes:
@@ -413,7 +410,7 @@ def input(nodeName, value):
     return "values set"
 
 
-@app.route("/output/<nodeName>")
+@application.route("/output/<nodeName>")
 def output(nodeName):
     """Retrieves the out_val for a given node"""
     heartbeatHandler(nodeName)
@@ -427,7 +424,7 @@ def output(nodeName):
         # TODO: Change this to a http error code
 
 
-@app.route("/streamStatus/<nodeName>/<streamController>")
+@application.route("/streamStatus/<nodeName>/<streamController>")
 def streamStatus(nodeName, streamController):
     """
     Checks whether a given stream is active or not
@@ -441,7 +438,7 @@ def streamStatus(nodeName, streamController):
         raise KeyError("{0} is not a stream controller".format(streamController))
         # TODO: Change this to a http error code
 
-@app.route("/gameStateESP/<nodeName>/<gameState>/<status>", methods=['POST'])
+@application.route("/gameStateESP/<nodeName>/<gameState>/<status>", methods=['POST'])
 def updateGameStateESP(nodeName, gameState, status):
     """
     API for ESP updating gamestate
@@ -450,20 +447,19 @@ def updateGameStateESP(nodeName, gameState, status):
     heartbeatHandler(nodeName)
     return updateGameState(gameState, status)
 
-@app.route("/gameState/<gameState>/<status>", methods=['POST'])
+@application.route("/gameState/<gameState>/<status>", methods=['POST'])
 def updateGameState(gameState, status):
     """
     API for updating gamestate from web
     """
     if gameState in pServer.states:
         pServer.setState(gameState, int(status))
-        print(pServer)
     else:
         raise KeyError("{0} is not a game state".format(gameState))
         # TODO: Change this to a http error code
     return "game state set"
 
-@app.route("/gameState/<gameState>/toggle", methods=['POST'])
+@application.route("/gameState/<gameState>/toggle", methods=['POST'])
 def toggleGameState(gameState):
     """
     Sets state to completed if the state was INACTIVE or ACTIVE
@@ -483,12 +479,12 @@ def toggleGameState(gameState):
     return "game state toggled"
 
 
-@app.route("/playAudio/<nodeName>/<audioFile>", methods=['POST'])
+@application.route("/playAudio/<nodeName>/<audioFile>", methods=['POST'])
 def playAudioESP(nodeName, audioFile):
     heartbeatHandler(nodeName)
     return playAudio(audioFile)
 
-@app.route("/playAudio/<audioFile>", methods=['POST'])
+@application.route("/playAudio/<audioFile>", methods=['POST'])
 def playAudio(audioFile):
     """
     Interface used by the nodes to play audio from the server
@@ -501,11 +497,11 @@ def playAudio(audioFile):
     return "Audio Completed"
 
 
-@app.route("/setHint", methods=['POST'])
+@application.route("/setHint", methods=['POST'])
 def setHint():
     pServer.setHint(request.form["hint_message"], request.form["hint_timer"], True)
     return "Hint Recieved", 204
 
 
 if __name__ == "__main__":
-    app.run(threaded=True, host = '0.0.0.0')
+    application.run(threaded=True, host = '0.0.0.0')
