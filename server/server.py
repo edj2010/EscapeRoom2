@@ -373,6 +373,7 @@ def heartbeatHandler(nodeName):
     sets the last_ping value for a given node to the current time.
     This is used to track if any nodes become unresponsive
     """
+    data = request.data
     if nodeName in pServer.nodes:
         conn = pServer.engine.connect()
         stmt = (
@@ -444,6 +445,7 @@ def updateGameStateESP(nodeName, gameState, status):
     API for ESP updating gamestate
     Requires nodeName to update heartbeat
     """
+    data = request.data
     heartbeatHandler(nodeName)
     return updateGameState(gameState, status)
 
@@ -481,6 +483,7 @@ def toggleGameState(gameState):
 
 @application.route("/playAudio/<nodeName>/<audioFile>", methods=['POST'])
 def playAudioESP(nodeName, audioFile):
+    data = request.data
     heartbeatHandler(nodeName)
     return playAudio(audioFile)
 
