@@ -1,8 +1,11 @@
 # EscapeRoom2
 
 
+## Running the Server
+Make sure that you have the virtual environment activated by running `pipenv shell` at the root of the repo, and that all dependencies are up to date with `pipenv install`. To run the server in debug mode, run `python server/server.py` to run the server in production mode, `cd ./server` and then `gunicorn -w 4 -b 127.0.0.1:5000 wsgi`
 
-
+## Working on the Front-end
+Before working on the front-end, make sure to have the server running, and then `cd ./static` and run `npm run watch`. This will automatically rebuild the compiled js files whenever you save changes. Also run `npm install` from the `static` folder to make sure that you have all the required dependencies installed.
 
 
 ## DSL Format
