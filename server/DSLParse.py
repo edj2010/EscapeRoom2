@@ -38,7 +38,7 @@ def DSLParse(dslfile=DSLFILE, jsonfile=JSONFILE):
 
         category, data = line.split("(")
 
-        data = (data[:-2]).split(", ")
+        data = [d.strip() for d in (data[:-2]).split(", ")]
 
         if category == "Stream":
             jsonDict["Streams"].append(data[2])

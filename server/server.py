@@ -160,7 +160,8 @@ class PuzzleServer:
             .where(gameroom_table.c.gameroom_id == 1)
             .values({'end_time': int(time.time()),
                      'gamestate': "completed",
-                    })
+                     'paused': True
+                    }) 
             )
         conn.execute(updtStmt)
         conn.close()
@@ -173,7 +174,8 @@ class PuzzleServer:
         updtStmt = (
             gameroom_table.update()
             .where(gameroom_table.c.gameroom_id == 1)
-            .values({'gamestate': "out_of_time"})
+            .values({'gamestate': "out_of_time",
+                     'paused': True})
                 )
         conn.execute(updtStmt)
         conn.close()
@@ -293,14 +295,19 @@ class PuzzleServer:
                                                         for dState in dependants[state]])
 
         return g + "}"
+    
+    def getGameStates(self):
+        return {state: self.getState(state) for state in self.states}
+
+    def getGraph(self):
+        return self._getGraph(self.getGameStates(), self.dependants)
 
     def __str__(self):
         """
         toString method for puzzle server
         Currently just prints graph of game states in dict and graph form
         """
-        gameStates = {state: self.getState(state) for state in self.states}
-        return self._getGraph(gameStates, self.dependants)
+        return "***************\n" + str(self.dependancies) + "\n" + str(self.dependants) + "\n" + str(self.getGameStates()) + "\n" + self.getGraph()
 
 pServer = PuzzleServer("connections.json")
 
@@ -334,7 +341,8 @@ def getData():
 
 @application.route("/graph")
 def getGraph():
-    return str(pServer)
+    print(pServer)
+    return pServer.getGraph()
 
 @application.route("/nodeStates")
 def getActiveNodes():
