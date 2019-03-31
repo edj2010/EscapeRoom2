@@ -6,8 +6,8 @@ import Graph from 'react-graph-vis';
 import ReactTable from 'react-table';
 import vis from 'vis';
 
-//let BASE_URL = "ogillespie.pythonanywhere.com";
-let BASE_URL = "localhost:5000";
+let BASE_URL = "ogillespie.pythonanywhere.com";
+/* let BASE_URL = "localhost:5000"; */
 let TICK_TIME = 5000;
 
 export default class Control extends Component {

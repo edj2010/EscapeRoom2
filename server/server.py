@@ -27,7 +27,7 @@ ERROR_COLOR = "indianred3"
 FUNC_COLOR = "skyblue"
 
 AUDIO_PATH = "../Sound/"
-GAME_LEN = 3600
+GAME_LEN = 1800
 
 class PuzzleServer:
 

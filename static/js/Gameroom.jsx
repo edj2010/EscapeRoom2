@@ -5,7 +5,7 @@ import ReactCountdownClock from 'react-countdown-clock';
 import SevenSegClock from "./SevenSegClock.jsx"
 import { Textfit } from 'react-textfit';
 
-let BASE_URL = "localhost:5000";
+let BASE_URL = "ogillespie.pythonanywhere.com";
 let TICK_TIME = 5000;
 let HINT_AUDIO_FILE = "Crash-Cymbal-1.wav";
 
