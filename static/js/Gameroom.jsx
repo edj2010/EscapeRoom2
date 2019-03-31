@@ -145,7 +145,7 @@ export default class Gameroom extends Component {
 
     lowerTime()
     {
-        if (!this.state.paused && !this.state.gamestate === "completed"){
+        if (!this.state.paused && this.state.gamestate !== "completed"){
             this.setState({"time": this.state.time - 1})
         }
     }

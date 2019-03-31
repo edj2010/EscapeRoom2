@@ -80,14 +80,22 @@ export default class Control extends Component {
                 console.log(error);
             });
     }
-
+    decrementTime(){
+        if (this.state.gamestate !== "completed"){
+            this.setState({"time": this.state.time - 1})
+        }
+    }
     componentDidMount() {
         this.ajaxID = setInterval(
         () => this.checkServerState(),
-        TICK_TIME
-    )};
+        TICK_TIME);
+        this.timer = setInterval(
+        () => this.decrementTime(),
+        1000);
+    };
     componentWillUnmount() {
         clearInterval(this.ajaxID);
+        clearInterval(this.timer);
     }
 
   checkServerState(){
@@ -108,8 +116,10 @@ class TimerWrapper extends Component {
         } else {
             return (
                 <div>
-                    <Timer countDown startTime={this.props.time}/>
-                    <p>{" Seconds left!"}</p>
+                    <span>{Math.floor(this.props.time/60)}</span>
+                    <span>{" Minutes and "}</span>
+                    <span>{this.props.time%60}</span>
+                    <span>{" Seconds left!"}</span>
                 </div>
             );
         }
