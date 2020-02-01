@@ -81,7 +81,7 @@ export default class Control extends Component {
             });
     }
     decrementTime(){
-        if (this.state.gamestate !== "completed"){
+        if (this.state.gamestate === "ongoing"){
             this.setState({"time": this.state.time - 1})
         }
     }

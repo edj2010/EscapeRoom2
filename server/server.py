@@ -353,6 +353,10 @@ def getActiveNodes():
                     'active': active_node_names,
                     'finished': finished_node_names})
 
+@application.route("/nodeState/<nodeName>")
+def getNodeState(nodeName):
+    return pServer.getState(nodeName)
+
 @application.route("/heartbeats")
 def getHeartbeats():
     results = pServer.getHeartbeats()
