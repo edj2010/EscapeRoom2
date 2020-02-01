@@ -355,7 +355,7 @@ def getActiveNodes():
 
 @application.route("/nodeState/<nodeName>")
 def getNodeState(nodeName):
-    return pServer.getState(nodeName)
+    return str(pServer.getState(nodeNamepServer.getState(nodeName)))
 
 @application.route("/heartbeats")
 def getHeartbeats():
