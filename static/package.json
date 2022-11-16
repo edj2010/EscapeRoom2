@@ -13,7 +13,7 @@
     "react-dom": "^16.2.0",
     "react-graph-vis": "^1.0.2",
     "react-player": "^1.1.1",
-    "react-scripts": "1.1.0",
+    "react-scripts": "5.0.1",
     "react-table": "^6.8.6",
     "react-textfit": "^1.1.0",
     "react.timer": "^2.1.0",
